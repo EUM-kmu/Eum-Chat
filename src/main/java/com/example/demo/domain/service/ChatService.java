@@ -29,7 +29,6 @@ public class ChatService {
         message.setSenderUuid(requestDTO.getSenderUuid());
         message.setMessage(requestDTO.getMessage());
         message.setCreatedAt(LocalDateTime.now());
-        System.out.println("안녕");
         message = chatRepository.save(message);
 
         // 저장된 메시지를 바탕으로 ChatMessage 객체 생성 및 브로드캐스트
@@ -51,7 +50,7 @@ public class ChatService {
         chatMessage.setSenderName(message.getSenderName());
         chatMessage.setMessage(message.getMessage());
         chatMessage.setType(ChatMessage.MessageType.CHAT); // 메시지 타입 설정.. TODO: join, leave 는 아직 안함
-        // 기타 필요한 필드 설정
+        chatMessage.setCreatedAt(message.getCreatedAt());
         return chatMessage;
     }
 
