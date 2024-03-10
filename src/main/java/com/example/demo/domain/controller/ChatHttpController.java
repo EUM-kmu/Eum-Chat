@@ -14,17 +14,17 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/chat")
+@RequestMapping("/chat/room/{roomIdx}")
 public class ChatHttpController {
 
     private final ChatService chatService;
 
-    @PostMapping
+    @PostMapping("/message")
     public MessageResponseDTO createMessage(@RequestBody MessageRequestDTO requestDTO) {
         return chatService.saveMessage(requestDTO);
     }
 
-    @GetMapping("/room/{roomIdx}/messages")
+    @GetMapping("/messages")
     public List<MessageResponseDTO> getMessagesByRoomIdx(@PathVariable Long roomIdx) {
         return chatService.getAllMessagesByRoomIdx(roomIdx);
     }
