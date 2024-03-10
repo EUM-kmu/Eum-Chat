@@ -24,9 +24,9 @@ public class ChatHttpController {
         return chatService.saveMessage(requestDTO);
     }
 
-    @GetMapping
-    public List<MessageResponseDTO> getAllMessages() {
-        return chatService.getAllMessages();
+    @GetMapping("/room/{roomIdx}/messages")
+    public List<MessageResponseDTO> getMessagesByRoomIdx(@PathVariable Long roomIdx) {
+        return chatService.getAllMessagesByRoomIdx(roomIdx);
     }
 
 }

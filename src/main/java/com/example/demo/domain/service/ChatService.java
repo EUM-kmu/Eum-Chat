@@ -61,8 +61,8 @@ public class ChatService {
         messagingTemplate.convertAndSend("/sub/room/" + roomIdx, chatMessage);
     }
 
-    public List<MessageResponseDTO> getAllMessages() {
-        return chatRepository.findAll().stream()
+    public List<MessageResponseDTO> getAllMessagesByRoomIdx(Long roomIdx) {
+        return chatRepository.findByRoomIdx(roomIdx).stream()
                 .map(message -> new MessageResponseDTO(
                         message.getId(),
                         message.getRoomIdx(),
