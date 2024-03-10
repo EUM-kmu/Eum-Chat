@@ -1,6 +1,7 @@
 package com.example.demo.domain.controller;
 
 import com.example.demo.domain.ChatMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -11,14 +12,11 @@ import java.time.LocalDateTime;
 
 // WebSocket 통신을 위한 controller
 @Slf4j
+@RequiredArgsConstructor
 @Controller
 public class ChatWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
-
-    public ChatWebSocketController(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
-    }
 
     /*
     TODO: 사용자 입장 시 알림.. 아직까진 새로운 사람이 들어올 경우가 없음(v1.0)
