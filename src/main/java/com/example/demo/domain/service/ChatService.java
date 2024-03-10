@@ -6,6 +6,7 @@ import com.example.demo.domain.dto.MessageRequestDTO;
 import com.example.demo.domain.dto.MessageResponseDTO;
 import com.example.demo.domain.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -30,10 +32,9 @@ public class ChatService {
         message.setMessage(requestDTO.getMessage());
         message.setCreatedAt(LocalDateTime.now());
         message = chatRepository.save(message);
-
         // 저장된 메시지를 바탕으로 ChatMessage 객체 생성 및 브로드캐스트
         ChatMessage chatMessage = convertToChatMessage(message);
-        broadcastMessage(chatMessage, message.getRoomIdx());
+        broadcastMessage(chatMessage, chatMessage.getRoomIdx());
 
         return new MessageResponseDTO(
                 message.getId(),
@@ -47,6 +48,7 @@ public class ChatService {
 
     private ChatMessage convertToChatMessage(Message message) {
         ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setRoomIdx(message.getRoomIdx());
         chatMessage.setSenderName(message.getSenderName());
         chatMessage.setMessage(message.getMessage());
         chatMessage.setType(ChatMessage.MessageType.CHAT); // 메시지 타입 설정.. TODO: join, leave 는 아직 안함
@@ -56,7 +58,7 @@ public class ChatService {
 
     private void broadcastMessage(ChatMessage chatMessage, Long roomIdx) {
         // 특정 채팅방 구독자들에게 메시지를 브로드캐스트
-        messagingTemplate.convertAndSend("/topic/chatroom/" + roomIdx, chatMessage);
+        messagingTemplate.convertAndSend("/sub/room/" + roomIdx, chatMessage);
     }
 
     public List<MessageResponseDTO> getAllMessages() {

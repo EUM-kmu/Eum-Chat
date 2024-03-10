@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class ChatMessage {
-    private MessageType type; // 메시지 유형 (예: CHAT, JOIN, LEAVE)
+    private MessageType type;
+    private Long roomIdx; // TODO: roomIdx type?
     private String message;
     private String senderName;
     private LocalDateTime createdAt;
