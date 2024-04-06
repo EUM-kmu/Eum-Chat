@@ -1,5 +1,6 @@
 package com.example.demo.domain.controller;
 
+import com.example.demo.domain.base.BaseResponseEntity;
 import com.example.demo.domain.dto.MessageRequestDTO;
 import com.example.demo.domain.dto.MessageResponseDTO;
 import com.example.demo.domain.service.ChatService;
@@ -17,19 +18,19 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/chat/room/{roomIdx}")
+@RequestMapping("/api/chats")
 public class ChatHttpController {
 
     private final ChatService chatService;
 
-    @PostMapping("/message")
+    @PostMapping("/{roomIdx}/message")
     @Operation(summary = "채팅을 보냅니다.")
     public MessageResponseDTO createMessage(@RequestBody MessageRequestDTO requestDTO) {
         return chatService.saveMessage(requestDTO);
     }
 
-    @GetMapping("/messages")
-    @Operation(summary = "전체 채팅 내역을 확인합니다.")
+    @GetMapping("/{roomIdx}")
+    @Operation(summary = "특정 채팅방의 전체 채팅 내역을 확인합니다.")
     public List<MessageResponseDTO> getMessagesByRoomIdx(
             @Parameter(description = "채팅 내역을 확인할 room 의 id", example = "1", required = true)
             @PathVariable Long roomIdx
