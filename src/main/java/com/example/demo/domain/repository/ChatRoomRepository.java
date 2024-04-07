@@ -13,4 +13,6 @@ public interface ChatRoomRepository extends MongoRepository<ChatRoom, String> {
     @Query("{'members': ?0}")
     List<ChatRoom> findAllById(String id);
 
+    ChatRoom findMembersById(String chatRoomId);
+
 }

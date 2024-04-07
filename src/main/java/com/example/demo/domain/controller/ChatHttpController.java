@@ -49,13 +49,15 @@ public class ChatHttpController {
         return response;
     }
 
-    @GetMapping("/{roomIdx}")
-    @Operation(summary = "특정 채팅방의 전체 채팅 내역을 확인합니다.")
-    public List<MessageResponseDTO> getMessagesByRoomIdx(
+    @GetMapping("/{chatRoomId}")
+    @Operation(summary = "유저가 속한 특정 채팅방의 전체 채팅 내역을 확인합니다.")
+    public BaseResponseEntity<?> getMessagesByChatRoomId(
             @Parameter(description = "채팅 내역을 확인할 room 의 id", example = "1", required = true)
-            @PathVariable String chatRoomId
+            @PathVariable String chatRoomId,
+            @RequestHeader String userId
     ) {
-        return chatService.getAllMessagesByRoomIdx(chatRoomId);
+        BaseResponseEntity response =  chatService.getAllMessagesByRoomIdx(chatRoomId, userId);
+        return response;
     }
 
 }

@@ -75,17 +75,33 @@ public class ChatService {
         messagingTemplate.convertAndSend("/sub/room/" + chatRoomId, chatMessage);
     }
 
-    public List<MessageResponseDTO> getAllMessagesByRoomIdx(String chatRoomId) {
-//        return chatRepository.findByChatRoomId(chatRoomId).stream()
-//                .map(message -> new MessageResponseDTO(
-//                        message.getId(),
-//                        message.getChatRoomId(),
-//                        message.getSenderUuid(),
-//                        message.getMessage(),
-//                        message.getCreatedAt()
-//                ))
-//                .collect(Collectors.toList());
-        return null;
+    public BaseResponseEntity<?> getAllMessagesByRoomIdx(String chatRoomId, String userId) {
+
+        if(chatRoomId.length() != 24){
+            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
+        }
+
+        ChatRoom chatRoom = chatRoomRepository.findMembersById(chatRoomId);
+
+        // 채팅방 있는지 확인
+        if(chatRoom == null){
+            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "해당 채팅방이 없습니다.");
+        }
+
+        // 해당 채팅방에 유저가 속해 있는지 확인
+        boolean isContained = chatRoom.getMembers().contains(userId);
+        if(!isContained){
+            return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 참여자가 아닙니다.");
+        }
+
+        List<MessageResponseDTO> messages;
+        messages = chatRepository.findByChatRoomId(chatRoomId).stream()
+                .map(form -> new MessageResponseDTO(
+                        form.getSenderUuid(),
+                        form.getMessage(),
+                        form.getCreatedAt()
+                )).collect(Collectors.toList());
+        return new BaseResponseEntity<>(HttpStatus.OK, messages);
     }
 
     public BaseResponseEntity<?> createChatRoom(RoomRequestDto dto, String userId) {
