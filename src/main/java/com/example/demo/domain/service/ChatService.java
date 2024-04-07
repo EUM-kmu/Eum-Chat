@@ -95,4 +95,10 @@ public class ChatService {
             return new BaseResponseEntity<>(e);
         }
     }
+
+    public BaseResponseEntity getChatRoomsById(String userId) {
+        List<ChatRoom> myRooms;
+        myRooms = chatRoomRepository.findAllById(userId);
+        return new BaseResponseEntity(HttpStatus.OK, myRooms.stream().map(RoomResponseDto::new));
+    }
 }

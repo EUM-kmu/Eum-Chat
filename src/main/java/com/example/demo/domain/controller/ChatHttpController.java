@@ -32,6 +32,13 @@ public class ChatHttpController {
         return response;
     }
 
+    @GetMapping("")
+    @Operation(summary = "특정 유저가 속한 채팅방 목록을 불러옵니다.")
+    public BaseResponseEntity getMyChatRooms(@RequestHeader String userId) {
+        BaseResponseEntity response = chatService.getChatRoomsById(userId);
+        return response;
+    }
+
 
     @PostMapping("/{roomIdx}/message")
     @Operation(summary = "채팅을 보냅니다.")
