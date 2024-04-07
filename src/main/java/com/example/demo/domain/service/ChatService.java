@@ -19,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -96,9 +98,9 @@ public class ChatService {
         }
     }
 
-    public BaseResponseEntity getChatRoomsById(String userId) {
+    public BaseResponseEntity<Stream<RoomResponseDto>> getChatRoomsById(String userId) {
         List<ChatRoom> myRooms;
         myRooms = chatRoomRepository.findAllById(userId);
-        return new BaseResponseEntity(HttpStatus.OK, myRooms.stream().map(RoomResponseDto::new));
+        return new BaseResponseEntity<>(HttpStatus.OK, myRooms.stream().map(RoomResponseDto::new));
     }
 }
