@@ -15,7 +15,7 @@ public class MessageResponseDTO {
     private String id;
 
     @Schema(description = "채팅방 id" , example = "1")
-    private Long roomIdx;
+    private String chatRoomId;
 
     @Schema(description = "보내는 사람 닉네임" , example = "홍길동")
     private String senderName;
@@ -27,9 +27,9 @@ public class MessageResponseDTO {
     private String message;
     private LocalDateTime createdAt;
 
-    public MessageResponseDTO(String id, Long roomIdx, String senderName, String senderUuid, String message, LocalDateTime createdAt) {
+    public MessageResponseDTO(String id, String chatRoomId, String senderName, String senderUuid, String message, LocalDateTime createdAt) {
         this.id = id;
-        this.roomIdx = roomIdx;
+        this.chatRoomId = chatRoomId;
         this.senderName = senderName;
         this.senderUuid = senderUuid;
         this.message = message;

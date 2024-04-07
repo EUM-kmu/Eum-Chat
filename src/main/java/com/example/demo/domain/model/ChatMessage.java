@@ -1,4 +1,4 @@
-package com.example.demo.domain;
+package com.example.demo.domain.model;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Setter
 public class ChatMessage {
     private MessageType type;
-    private Long roomIdx; // TODO: roomIdx type?
+    private String chatRoomId;
     private String message;
     private String senderName;
     private LocalDateTime createdAt;

@@ -1,10 +1,11 @@
-package com.example.demo.domain;
+package com.example.demo.domain.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -21,8 +22,9 @@ public class Message {
     @Field(value = "_id", targetType = FieldType.OBJECT_ID)
     private String id;
 
-    @Field("room_idx")
-    private Long roomIdx;
+    @DBRef(db="chatRoom", lazy = true)
+    @Field("chat_room_id")
+    private String chatRoomId;
 
     @Field("sender_name")
     private String senderName;

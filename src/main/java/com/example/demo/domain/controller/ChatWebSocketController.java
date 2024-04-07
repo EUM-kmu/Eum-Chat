@@ -1,6 +1,6 @@
 package com.example.demo.domain.controller;
 
-import com.example.demo.domain.ChatMessage;
+import com.example.demo.domain.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -23,24 +23,24 @@ public class ChatWebSocketController {
     @MessageMapping("/chat.join")
     public void joinChatRoom(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
 
-        String roomIdx = headerAccessor.getSessionAttributes().get("roomIdx").toString();
+        String chatRoomId = headerAccessor.getSessionAttributes().get("chatRoomId").toString();
         chatMessage.setType(ChatMessage.MessageType.JOIN);
         chatMessage.setMessage(chatMessage.getSenderName() + "님이 입장하셨습니다.");
-        broadcastUserStatus(chatMessage, roomIdx);
+        broadcastUserStatus(chatMessage, chatRoomId);
     }
 
      */
 
     @MessageMapping("/chat.leave")
     public void leaveChatRoom(@Payload ChatMessage chatMessage) {
-        Long roomIdx = chatMessage.getRoomIdx();
+        String chatRoomId = chatMessage.getChatRoomId();
         chatMessage.setType(ChatMessage.MessageType.LEAVE);
         chatMessage.setMessage(chatMessage.getSenderName() + "님이 퇴장하셨습니다.");
         chatMessage.setCreatedAt(LocalDateTime.now());
-        broadcastUserStatus(chatMessage, roomIdx);
+        broadcastUserStatus(chatMessage, chatRoomId);
     }
 
-    private void broadcastUserStatus(ChatMessage chatMessage, Long roomIdx) {
-        messagingTemplate.convertAndSend("/sub/room/" + roomIdx, chatMessage);
+    private void broadcastUserStatus(ChatMessage chatMessage, String chatRoomId) {
+        messagingTemplate.convertAndSend("/sub/room/" + chatRoomId, chatMessage);
     }
 }

@@ -10,7 +10,7 @@ import lombok.Setter;
 public class MessageRequestDTO {
 
     @Schema(description = "채팅방 id" , example = "1")
-    private Long roomIdx;
+    private String chatRoomId;
 
     @Schema(description = "보내는 사람 닉네임" , example = "홍길동")
     private String senderName;
