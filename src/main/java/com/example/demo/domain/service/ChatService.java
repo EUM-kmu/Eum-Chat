@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,33 +32,38 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public MessageResponseDTO saveMessage(MessageRequestDTO requestDTO) {
+    public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
+
         Message message = new Message();
-        message.setChatRoomId(requestDTO.getChatRoomId());
-        message.setSenderName(requestDTO.getSenderName());
-        message.setSenderUuid(requestDTO.getSenderUuid());
-        message.setMessage(requestDTO.getMessage());
+        message.setChatRoomId(chatRoomId);
+//        message.setSenderName(dto.getSenderName());
+        message.setSenderUuid(userId);
+        message.setMessage(content);
         message.setCreatedAt(LocalDateTime.now());
-        message = chatRepository.save(message);
 
-        // 저장된 메시지를 바탕으로 ChatMessage 객체 생성 및 브로드캐스트
-        ChatMessage chatMessage = convertToChatMessage(message);
-        broadcastMessage(chatMessage, chatMessage.getChatRoomId());
+        try {
+            message = chatRepository.save(message);
 
-        return new MessageResponseDTO(
-                message.getId(),
-                message.getChatRoomId(),
-                message.getSenderName(),
-                message.getSenderUuid(),
-                message.getMessage(),
-                message.getCreatedAt()
-        );
+            try{
+                // 저장된 메시지를 바탕으로 ChatMessage 객체 생성 및 브로드캐스트
+                ChatMessage chatMessage = convertToChatMessage(message);
+                broadcastMessage(chatMessage, chatRoomId);
+
+                return new BaseResponseEntity<>(HttpStatus.OK);
+
+            }catch (Exception e){
+                return new BaseResponseEntity<>(e);
+            }
+
+        } catch (Exception e){
+            return new BaseResponseEntity<>(e);
+        }
+
     }
 
     private ChatMessage convertToChatMessage(Message message) {
         ChatMessage chatMessage = new ChatMessage();
-        chatMessage.setChatRoomId(message.getChatRoomId());
-        chatMessage.setSenderName(message.getSenderName());
+        chatMessage.setSenderId(message.getSenderUuid());
         chatMessage.setMessage(message.getMessage());
         chatMessage.setType(ChatMessage.MessageType.CHAT); // 메시지 타입 설정.. TODO: join, leave 는 아직 안함
         chatMessage.setCreatedAt(message.getCreatedAt());
@@ -72,16 +76,16 @@ public class ChatService {
     }
 
     public List<MessageResponseDTO> getAllMessagesByRoomIdx(String chatRoomId) {
-        return chatRepository.findByChatRoomId(chatRoomId).stream()
-                .map(message -> new MessageResponseDTO(
-                        message.getId(),
-                        message.getChatRoomId(),
-                        message.getSenderName(),
-                        message.getSenderUuid(),
-                        message.getMessage(),
-                        message.getCreatedAt()
-                ))
-                .collect(Collectors.toList());
+//        return chatRepository.findByChatRoomId(chatRoomId).stream()
+//                .map(message -> new MessageResponseDTO(
+//                        message.getId(),
+//                        message.getChatRoomId(),
+//                        message.getSenderUuid(),
+//                        message.getMessage(),
+//                        message.getCreatedAt()
+//                ))
+//                .collect(Collectors.toList());
+        return null;
     }
 
     public BaseResponseEntity<?> createChatRoom(RoomRequestDto dto, String userId) {

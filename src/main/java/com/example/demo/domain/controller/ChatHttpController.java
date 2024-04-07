@@ -1,19 +1,16 @@
 package com.example.demo.domain.controller;
 
 import com.example.demo.domain.base.BaseResponseEntity;
-import com.example.demo.domain.dto.MessageRequestDTO;
 import com.example.demo.domain.dto.MessageResponseDTO;
 import com.example.demo.domain.dto.RoomRequestDto;
 import com.example.demo.domain.dto.RoomResponseDto;
 import com.example.demo.domain.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -42,10 +39,14 @@ public class ChatHttpController {
     }
 
 
-    @PostMapping("/{roomIdx}/message")
+    @PostMapping("/{chatRoomId}/message")
     @Operation(summary = "채팅을 보냅니다.")
-    public MessageResponseDTO createMessage(@RequestBody MessageRequestDTO requestDTO) {
-        return chatService.saveMessage(requestDTO);
+    public BaseResponseEntity<?> createMessage(
+            @RequestBody String message,
+            @RequestHeader String userId,
+            @PathVariable String chatRoomId ) {
+        BaseResponseEntity response = chatService.saveMessage(message, userId, chatRoomId);
+        return response;
     }
 
     @GetMapping("/{roomIdx}")

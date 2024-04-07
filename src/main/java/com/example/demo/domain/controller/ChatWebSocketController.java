@@ -31,14 +31,14 @@ public class ChatWebSocketController {
 
      */
 
-    @MessageMapping("/chat.leave")
-    public void leaveChatRoom(@Payload ChatMessage chatMessage) {
-        String chatRoomId = chatMessage.getChatRoomId();
-        chatMessage.setType(ChatMessage.MessageType.LEAVE);
-        chatMessage.setMessage(chatMessage.getSenderName() + "님이 퇴장하셨습니다.");
-        chatMessage.setCreatedAt(LocalDateTime.now());
-        broadcastUserStatus(chatMessage, chatRoomId);
-    }
+//    @MessageMapping("/chat.leave")
+//    public void leaveChatRoom(@Payload ChatMessage chatMessage) {
+//        String chatRoomId = chatMessage.getChatRoomId();
+//        chatMessage.setType(ChatMessage.MessageType.LEAVE);
+//        chatMessage.setMessage(chatMessage.getSenderName() + "님이 퇴장하셨습니다.");
+//        chatMessage.setCreatedAt(LocalDateTime.now());
+//        broadcastUserStatus(chatMessage, chatRoomId);
+//    }
 
     private void broadcastUserStatus(ChatMessage chatMessage, String chatRoomId) {
         messagingTemplate.convertAndSend("/sub/room/" + chatRoomId, chatMessage);

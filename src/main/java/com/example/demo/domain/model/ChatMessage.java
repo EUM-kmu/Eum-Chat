@@ -8,10 +8,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class ChatMessage {
+    private String senderId;
     private MessageType type;
-    private String chatRoomId;
     private String message;
-    private String senderName;
     private LocalDateTime createdAt;
 
     public enum MessageType {
