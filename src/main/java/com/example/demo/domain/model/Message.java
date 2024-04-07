@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -25,8 +24,8 @@ public class Message {
     @Field("chat_room_id")
     private String chatRoomId;
 
-    @Field("sender_uuid")
-    private String senderUuid;
+    @Field("user_id")
+    private String userId;
 
     @Field("message")
     private String message;

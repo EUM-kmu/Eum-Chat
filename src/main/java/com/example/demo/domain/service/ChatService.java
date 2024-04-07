@@ -4,7 +4,6 @@ import com.example.demo.domain.model.ChatMessage;
 import com.example.demo.domain.model.ChatRoom;
 import com.example.demo.domain.model.Message;
 import com.example.demo.domain.base.BaseResponseEntity;
-import com.example.demo.domain.dto.MessageRequestDTO;
 import com.example.demo.domain.dto.MessageResponseDTO;
 import com.example.demo.domain.dto.RoomRequestDto;
 import com.example.demo.domain.dto.RoomResponseDto;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -36,8 +34,7 @@ public class ChatService {
 
         Message message = new Message();
         message.setChatRoomId(chatRoomId);
-//        message.setSenderName(dto.getSenderName());
-        message.setSenderUuid(userId);
+        message.setUserId(userId);
         message.setMessage(content);
         message.setCreatedAt(LocalDateTime.now());
 
@@ -63,7 +60,7 @@ public class ChatService {
 
     private ChatMessage convertToChatMessage(Message message) {
         ChatMessage chatMessage = new ChatMessage();
-        chatMessage.setSenderId(message.getSenderUuid());
+        chatMessage.setUserId(message.getUserId());
         chatMessage.setMessage(message.getMessage());
         chatMessage.setType(ChatMessage.MessageType.CHAT); // 메시지 타입 설정.. TODO: join, leave 는 아직 안함
         chatMessage.setCreatedAt(message.getCreatedAt());
@@ -75,7 +72,7 @@ public class ChatService {
         messagingTemplate.convertAndSend("/sub/room/" + chatRoomId, chatMessage);
     }
 
-    public BaseResponseEntity<?> getAllMessagesByRoomIdx(String chatRoomId, String userId) {
+    public BaseResponseEntity<?> getAllMessagesByChatRoomId(String chatRoomId, String userId) {
 
         if(chatRoomId.length() != 24){
             return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
@@ -97,7 +94,7 @@ public class ChatService {
         List<MessageResponseDTO> messages;
         messages = chatRepository.findByChatRoomId(chatRoomId).stream()
                 .map(form -> new MessageResponseDTO(
-                        form.getSenderUuid(),
+                        form.getUserId(),
                         form.getMessage(),
                         form.getCreatedAt()
                 )).collect(Collectors.toList());
@@ -118,9 +115,14 @@ public class ChatService {
         }
     }
 
-    public BaseResponseEntity<Stream<RoomResponseDto>> getChatRoomsById(String userId) {
+    public BaseResponseEntity<?> getChatRoomsById(String userId) {
         List<ChatRoom> myRooms;
         myRooms = chatRoomRepository.findAllById(userId);
-        return new BaseResponseEntity<>(HttpStatus.OK, myRooms.stream().map(RoomResponseDto::new));
+
+        if(myRooms == null){
+            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "유저가 속한 채팅방이 없습니다.");
+        }else {
+            return new BaseResponseEntity<>(HttpStatus.OK, myRooms.stream().map(RoomResponseDto::new));
+        }
     }
 }

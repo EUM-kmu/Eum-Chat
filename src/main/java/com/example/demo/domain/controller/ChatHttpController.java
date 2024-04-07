@@ -1,18 +1,13 @@
 package com.example.demo.domain.controller;
 
 import com.example.demo.domain.base.BaseResponseEntity;
-import com.example.demo.domain.dto.MessageResponseDTO;
 import com.example.demo.domain.dto.RoomRequestDto;
-import com.example.demo.domain.dto.RoomResponseDto;
 import com.example.demo.domain.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Stream;
 
 // Http 통신을 위한 controller
 
@@ -26,14 +21,17 @@ public class ChatHttpController {
 
     @PostMapping("")
     @Operation(summary = "채팅방을 생성합니다.")
-    public BaseResponseEntity<?> createChatRoom(@RequestBody RoomRequestDto dto, @RequestHeader String userId) {
+    public BaseResponseEntity<?> createChatRoom(
+            @RequestBody RoomRequestDto dto,
+            @RequestHeader String userId
+    ) {
         BaseResponseEntity response = chatService.createChatRoom(dto, userId);
         return response;
     }
 
     @GetMapping("")
     @Operation(summary = "특정 유저가 속한 채팅방 목록을 불러옵니다.")
-    public BaseResponseEntity<Stream<RoomResponseDto>> getMyChatRooms(@RequestHeader String userId) {
+    public BaseResponseEntity<?> getMyChatRooms(@RequestHeader String userId) {
         BaseResponseEntity response = chatService.getChatRoomsById(userId);
         return response;
     }
@@ -44,7 +42,8 @@ public class ChatHttpController {
     public BaseResponseEntity<?> createMessage(
             @RequestBody String message,
             @RequestHeader String userId,
-            @PathVariable String chatRoomId ) {
+            @PathVariable String chatRoomId
+    ) {
         BaseResponseEntity response = chatService.saveMessage(message, userId, chatRoomId);
         return response;
     }
@@ -56,7 +55,7 @@ public class ChatHttpController {
             @PathVariable String chatRoomId,
             @RequestHeader String userId
     ) {
-        BaseResponseEntity response =  chatService.getAllMessagesByRoomIdx(chatRoomId, userId);
+        BaseResponseEntity response =  chatService.getAllMessagesByChatRoomId(chatRoomId, userId);
         return response;
     }
 
