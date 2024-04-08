@@ -1,4 +1,4 @@
-package com.example.demo.domain.dto;
+package com.example.demo.domain.dto.response;
 
 import com.example.demo.domain.model.ChatRoom;
 import lombok.Getter;

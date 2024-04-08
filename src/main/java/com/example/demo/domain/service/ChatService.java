@@ -1,12 +1,13 @@
 package com.example.demo.domain.service;
 
+import com.example.demo.domain.dto.response.MemberIdsResponseDto;
 import com.example.demo.domain.model.ChatMessage;
 import com.example.demo.domain.model.ChatRoom;
 import com.example.demo.domain.model.Message;
 import com.example.demo.domain.base.BaseResponseEntity;
-import com.example.demo.domain.dto.MessageResponseDTO;
-import com.example.demo.domain.dto.RoomRequestDto;
-import com.example.demo.domain.dto.RoomResponseDto;
+import com.example.demo.domain.dto.response.MessageResponseDTO;
+import com.example.demo.domain.dto.request.RoomRequestDto;
+import com.example.demo.domain.dto.response.RoomResponseDto;
 import com.example.demo.domain.repository.ChatRepository;
 import com.example.demo.domain.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,9 @@ public class ChatService {
 
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
 
+        BaseResponseEntity<String> BAD_REQUEST = isValidChatRoomId(chatRoomId);
+        if (BAD_REQUEST != null) return BAD_REQUEST;
+
         Message message = new Message();
         message.setChatRoomId(chatRoomId);
         message.setUserId(userId);
@@ -56,6 +60,13 @@ public class ChatService {
             return new BaseResponseEntity<>(e);
         }
 
+    }
+
+    private static BaseResponseEntity<String> isValidChatRoomId(String chatRoomId) {
+        if(chatRoomId.length() != 24){
+            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
+        }
+        return null;
     }
 
     private ChatMessage convertToChatMessage(Message message) {
@@ -124,5 +135,28 @@ public class ChatService {
         }else {
             return new BaseResponseEntity<>(HttpStatus.OK, myRooms.stream().map(RoomResponseDto::new));
         }
+    }
+
+    public BaseResponseEntity getAllMembersByChatRoomId(String chatRoomId, String userId) {
+
+        if(chatRoomId.length() != 24){
+            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
+        }
+
+        ChatRoom chatRoom = chatRoomRepository.findMembersById(chatRoomId);
+
+        // 채팅방 있는지 확인
+        if(chatRoom == null){
+            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "해당 채팅방이 없습니다.");
+        }
+
+        // 해당 채팅방에 유저가 속해 있는지 확인
+        boolean isContained = chatRoom.getMembers().contains(userId);
+        if(!isContained){
+            return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 참여자가 아닙니다.");
+        }
+
+        return new BaseResponseEntity<>(HttpStatus.OK, new MemberIdsResponseDto(chatRoom.getMembers()));
+
     }
 }

@@ -1,7 +1,7 @@
 package com.example.demo.domain.controller;
 
 import com.example.demo.domain.base.BaseResponseEntity;
-import com.example.demo.domain.dto.RoomRequestDto;
+import com.example.demo.domain.dto.request.RoomRequestDto;
 import com.example.demo.domain.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,6 +56,16 @@ public class ChatHttpController {
             @RequestHeader String userId
     ) {
         BaseResponseEntity response =  chatService.getAllMessagesByChatRoomId(chatRoomId, userId);
+        return response;
+    }
+
+    @GetMapping("/{chatRoomId}/members")
+    @Operation(summary = "유저가 속한 특정 채팅방의 멤버 목록을 불러옵니다.")
+    public BaseResponseEntity<?> getMembersByChatRoomId(
+            @PathVariable String chatRoomId,
+            @RequestHeader String userId
+    ) {
+        BaseResponseEntity response =  chatService.getAllMembersByChatRoomId(chatRoomId, userId);
         return response;
     }
 
