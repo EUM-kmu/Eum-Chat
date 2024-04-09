@@ -8,10 +8,12 @@ import lombok.Setter;
 @Setter
 public class RoomResponseDto {
     private String roomId;
+    private int postId;
     private int memberCount;
 
     public RoomResponseDto(ChatRoom chatRoom) {
         this.roomId = chatRoom.getId();
+        this.postId = chatRoom.getPostId();
         this.memberCount = chatRoom.getMembers().size();
     }
 }

@@ -13,7 +13,8 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 //_class 컬럼이 자동 생성 방지
 @Configuration
-@EnableMongoRepositories("com.example.demo.domain.repository")
+//@EnableMongoRepositories("com.example.demo.domain.repository")
+@EnableMongoRepositories("com.eum.haetsal.chat.domain.repository")
 @EnableMongoAuditing
 public class MongoDBConfig {
 
