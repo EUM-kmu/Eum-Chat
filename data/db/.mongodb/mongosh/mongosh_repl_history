@@ -1,0 +1,46 @@
+db.chatRoom.find()
+db.inventory.drop()
+show collections
+use chatDB
+db.grantRolesToUser("root", [{role: "readWrite", db: "chatDB"}])
+use admin
+show collections
+use chatDB
+db.auth('root', 'root')
+use chatDB
+use admin
+db.auth('root', 'root')
+use admin
+db.auth(<root>,<root>)
+mongo admin -u root -p 'root'
+show dbs
+show collections
+db.createUser({ user: 'root', pwd: 'root', roles: ['root'] })
+use admin
+db.auth("root",root)
+use admin
+show dbs
+db
+...   ]
+...     "1234"
+...     "1111",
+db.chatRoom.insertOne({ "postId": 1, ...   "members": [
+... })
+...   ]
+...     "1234"
+...     "1111",
+...   "members": [
+db.chatRoom.insertOne( { ...   "postId": 1,
+db.inventory.deleteMany({})
+use chatDB
+use inventory
+db.inventory.deleteOne()
+db.inventory.remove()
+db.inventory.insertOne({ "postId": 1, "members": [ "1111", "1234"] })
+use chatDB
+db.createUser({ user: 'root', pwd: 'root', roles: ['root'] })
+...   roles: ['root']
+...   pwd: 'root',
+db.createUser({ ...   user: 'root',
+use adminuse admin({ ...   user: 'root',
+use adminuse admin
