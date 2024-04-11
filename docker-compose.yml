@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  mongodb:
+    image: mongo:6.0.10
+    container_name: mongodb
+    hostname: mongodb
+    restart: always
+    environment:
+        - MONGO_INITDB_DATABASE=chatDB
+        - MONGO_INITDB_ROOT_USERNAME=root
+        - MONGO_INITDB_ROOT_PASSWORD=root
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/db:/data/db
+
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: springboot
+    hostname: springboot
+    ports:
+      - 8080:8080
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://root:root@mongodb:27017/chatDB?authSource=admin
+    links:
+      - mongodb
+    depends_on:
+      - mongodb
