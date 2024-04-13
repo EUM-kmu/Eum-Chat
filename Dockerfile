@@ -1,5 +1,5 @@
-#FROM --platform=linux/amd64 openjdk:17-jdk
-FROM openjdk:17-jdk
+FROM --platform=linux/amd64 openjdk:17-jdk
+#FROM openjdk:17-jdk
 
 LABEL maintainer="ytjdud01@kookmin.ac.kr"
 
