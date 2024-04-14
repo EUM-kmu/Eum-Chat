@@ -69,4 +69,14 @@ public class ChatHttpController {
         return response;
     }
 
+    @GetMapping("/OneToOneChat")
+    @Operation(summary = "두 유저가 1:1 채팅 중인 채팅방의 id(s)를 불러옵니다.")
+    public BaseResponseEntity<?> getOneToOneChatRooms(
+            @RequestParam String myId,
+            @RequestParam String theOtherId
+    ) {
+        BaseResponseEntity response =  chatService.getOneToOneChatRooms(myId, theOtherId);
+        return response;
+    }
+
 }
