@@ -20,7 +20,7 @@ public class ChatRoom {
     @Field(value = "_id", targetType = FieldType.OBJECT_ID)
     private String id;
 
-    private int postId; // 채팅과 연결된 게시글 id
+    private int postId;
 
     private List<String> members;
 }
