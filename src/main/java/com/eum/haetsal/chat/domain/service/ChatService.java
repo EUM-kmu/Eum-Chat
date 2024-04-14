@@ -3,6 +3,7 @@ package com.eum.haetsal.chat.domain.service;
 import com.eum.haetsal.chat.domain.client.ChatPostClient;
 import com.eum.haetsal.chat.domain.dto.request.ChatPostRequestDto;
 import com.eum.haetsal.chat.domain.dto.request.ChatRequestDTO;
+import com.eum.haetsal.chat.domain.dto.request.ChatUserRequestDto;
 import com.eum.haetsal.chat.domain.dto.response.*;
 import com.eum.haetsal.chat.domain.model.ChatMessage;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
@@ -106,14 +107,21 @@ public class ChatService {
             return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 참여자가 아닙니다.");
         }
 
-        List<MessageResponseDTO> messages;
-        messages = chatRepository.findByChatRoomId(chatRoomId).stream()
+
+        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList();
+        userIdList.setUserIdList(chatRoom.getMembers());
+        List<ChatUserRequestDto> userProfiles = chatPostClient.getChatUser(userIdList);
+
+        List<MessageResponseDTO> messages = chatRepository.findByChatRoomId(chatRoomId).stream()
                 .map(form -> new MessageResponseDTO(
                         form.getUserId(),
                         form.getMessage(),
                         form.getCreatedAt()
                 )).collect(Collectors.toList());
-        return new BaseResponseEntity<>(HttpStatus.OK, messages);
+
+        ChatUserResponseDto data = new ChatUserResponseDto(userProfiles, messages);
+
+        return new BaseResponseEntity<>(HttpStatus.OK, data);
     }
 
     public BaseResponseEntity<?> createChatRoom(RoomRequestDto dto, String userId) {
