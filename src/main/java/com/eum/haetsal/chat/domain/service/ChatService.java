@@ -1,13 +1,11 @@
 package com.eum.haetsal.chat.domain.service;
 
-import com.eum.haetsal.chat.domain.dto.response.MemberIdsResponseDto;
-import com.eum.haetsal.chat.domain.dto.response.MessageResponseDTO;
+import com.eum.haetsal.chat.domain.dto.response.*;
 import com.eum.haetsal.chat.domain.model.ChatMessage;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
 import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
 import com.eum.haetsal.chat.domain.dto.request.RoomRequestDto;
-import com.eum.haetsal.chat.domain.dto.response.RoomResponseDto;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -131,7 +130,7 @@ public class ChatService {
         List<ChatRoom> myRooms;
         myRooms = chatRoomRepository.findAllById(userId);
 
-        if(myRooms == null){
+        if(myRooms.isEmpty()){
             return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "유저가 속한 채팅방이 없습니다.");
         }else {
             return new BaseResponseEntity<>(HttpStatus.OK, myRooms.stream().map(RoomResponseDto::new));
@@ -159,5 +158,18 @@ public class ChatService {
 
         return new BaseResponseEntity<>(HttpStatus.OK, new MemberIdsResponseDto(chatRoom.getMembers()));
 
+    }
+
+    public BaseResponseEntity getOneToOneChatRooms(String myId, String theOtherId) {
+
+        // 유저 id 제대로 입력했는지 확인 -> 다른 서버에 요청
+
+        List<ChatRoom> OneToOneChatRooms = chatRoomRepository.findOneToOneChatRoomByExactTwoMembers(myId, theOtherId);
+
+        if(OneToOneChatRooms.isEmpty()){
+            return new BaseResponseEntity<>(HttpStatus.OK, "두 사람의 1:1 채팅방이 존재하지 않습니다.");
+        }
+
+        return new BaseResponseEntity<>(HttpStatus.OK, OneToOneChatRooms.stream().map(OneToOneChatRoomsResponseDto::new));
     }
 }
