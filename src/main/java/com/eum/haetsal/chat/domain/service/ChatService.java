@@ -1,5 +1,8 @@
 package com.eum.haetsal.chat.domain.service;
 
+import com.eum.haetsal.chat.domain.client.ChatPostClient;
+import com.eum.haetsal.chat.domain.dto.request.ChatPostRequestDto;
+import com.eum.haetsal.chat.domain.dto.request.ChatRequestDTO;
 import com.eum.haetsal.chat.domain.dto.response.*;
 import com.eum.haetsal.chat.domain.model.ChatMessage;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
@@ -29,6 +32,8 @@ public class ChatService {
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final SimpMessagingTemplate messagingTemplate;
+
+    private final ChatPostClient chatPostClient;
 
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
 
@@ -127,14 +132,36 @@ public class ChatService {
     }
 
     public BaseResponseEntity<?> getChatRoomsById(String userId) {
-        List<ChatRoom> myRooms;
-        myRooms = chatRoomRepository.findAllById(userId);
+        List<ChatRoom> myRooms = chatRoomRepository.findAllById(userId);
 
         if(myRooms.isEmpty()){
             return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "유저가 속한 채팅방이 없습니다.");
         }else {
-            return new BaseResponseEntity<>(HttpStatus.OK, myRooms.stream().map(RoomResponseDto::new));
+
+            ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList();
+            postIdList.setPostIdList(myRooms.stream()
+                    .map(chatRoom -> String.valueOf(chatRoom.getPostId()))
+                    .collect(Collectors.toList()));
+
+            List<ChatPostRequestDto> req = chatPostClient.getChatPost(postIdList);
+
+            List<ChatPostResponseDto> data = createChatPostResponseDtoList(myRooms, req);
+
+            return new BaseResponseEntity<>(HttpStatus.OK, data);
         }
+    }
+
+    private List<ChatPostResponseDto> createChatPostResponseDtoList(List<ChatRoom> rooms, List<ChatPostRequestDto> requests) {
+        List<ChatPostResponseDto> data = new ArrayList<>();
+
+        for (int i = 0; i < rooms.size(); i++) {
+            ChatRoom room = rooms.get(i);
+            ChatPostRequestDto request = requests.get(i);
+            ChatPostResponseDto responseDto = new ChatPostResponseDto(request, room);
+            data.add(responseDto);
+        }
+
+        return data;
     }
 
     public BaseResponseEntity getAllMembersByChatRoomId(String chatRoomId, String userId) {
