@@ -8,13 +8,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ChatPostResponseDto {
-    private int postId;
+    private Long postId;
     private String status;
     private String title;
     private String roomId;
     private int memberCount;
 
-    public ChatPostResponseDto(ChatPostRequestDto dto, ChatRoom chatRoom) {
+    public ChatPostResponseDto(ChatResponseDTO.PostInfo dto, ChatRoom chatRoom) {
         this.postId = dto.getPostId();
         this.status = dto.getStatus();
         this.title = dto.getTitle();

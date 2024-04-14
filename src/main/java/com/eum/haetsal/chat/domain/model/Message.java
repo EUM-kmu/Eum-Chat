@@ -1,5 +1,6 @@
 package com.eum.haetsal.chat.domain.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,7 +15,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Document(collection = "message")
-@NoArgsConstructor
 public class Message {
 
     @Id
@@ -34,4 +34,10 @@ public class Message {
     @CreatedDate
     private LocalDateTime createdAt;
 
+    public Message(String chatRoomId, String userId, String message, LocalDateTime createdAt) {
+        this.chatRoomId = chatRoomId;
+        this.userId = userId;
+        this.message = message;
+        this.createdAt = createdAt;
+    }
 }

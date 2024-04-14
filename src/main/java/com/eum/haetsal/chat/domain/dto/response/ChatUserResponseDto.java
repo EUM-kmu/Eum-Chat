@@ -17,12 +17,12 @@ import java.util.List;
 @Setter
 public class ChatUserResponseDto {
 
-    List<ChatUserRequestDto> userProfiles;
+    List<ChatResponseDTO.UserInfo> userInfos;
 
     List<MessageResponseDTO> messages;
 
-    public ChatUserResponseDto(List<ChatUserRequestDto> userProfiles, List<MessageResponseDTO> messages) {
-        this.userProfiles = userProfiles;
+    public ChatUserResponseDto(List<ChatResponseDTO.UserInfo> userInfos, List<MessageResponseDTO> messages) {
+        this.userInfos = userInfos;
         this.messages = messages;
     }
 }
