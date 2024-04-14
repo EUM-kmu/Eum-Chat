@@ -1,5 +1,6 @@
 package com.eum.haetsal.chat.domain.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +14,6 @@ import java.util.List;
 @Getter
 @Setter
 @Document("chatRoom")
-@NoArgsConstructor
 public class ChatRoom {
 
     @Id
@@ -23,4 +23,9 @@ public class ChatRoom {
     private int postId;
 
     private List<String> members;
+
+    public ChatRoom(int postId, List<String> members) {
+        this.postId = postId;
+        this.members = members;
+    }
 }
