@@ -3,6 +3,7 @@ package com.eum.haetsal.chat.domain.client;
 
 import com.eum.haetsal.chat.domain.dto.request.ChatPostRequestDto;
 import com.eum.haetsal.chat.domain.dto.request.ChatRequestDTO;
+import com.eum.haetsal.chat.domain.dto.request.ChatUserRequestDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,5 +13,8 @@ import java.util.List;
 public interface ChatPostClient {
 
     @PostMapping ("/haetsal-service/api/v2/chat/posts")
-    List<ChatPostRequestDto> getChatPost(@RequestBody ChatRequestDTO.PostIdList postIdList) ;
+    List<ChatPostRequestDto> getChatPost(@RequestBody ChatRequestDTO.PostIdList postIdList);
+
+    @PostMapping ("/haetsal-service/api/v2/chat/users")
+    List<ChatUserRequestDto> getChatUser(@RequestBody ChatRequestDTO.UserIdList userIdList) ;
 }
