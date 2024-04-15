@@ -9,7 +9,7 @@ public class ChatRequestDTO {
     @Getter
     @Setter
     public static class PostIdList{
-        private List<String> postIdList;
+        private List<Integer> postIdList;
     }
     @Getter
     @Setter
