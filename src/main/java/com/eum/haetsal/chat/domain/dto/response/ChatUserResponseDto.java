@@ -19,10 +19,15 @@ public class ChatUserResponseDto {
 
     List<ChatResponseDTO.UserInfo> userInfos;
 
+    ChatResponseDTO.PostInfo postInfo;
+
     List<MessageResponseDTO> messages;
 
-    public ChatUserResponseDto(List<ChatResponseDTO.UserInfo> userInfos, List<MessageResponseDTO> messages) {
+    public ChatUserResponseDto(List<ChatResponseDTO.UserInfo> userInfos,
+                               ChatResponseDTO.PostInfo postInfo,
+                               List<MessageResponseDTO> messages) {
         this.userInfos = userInfos;
+        this.postInfo = postInfo;
         this.messages = messages;
     }
 }
