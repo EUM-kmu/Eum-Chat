@@ -134,9 +134,8 @@ public class ChatService {
 
         }else {
             ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList();
-            postIdList.setPostIdList(myRooms.stream()
-                    .map(chatRoom -> String.valueOf(chatRoom.getPostId()))
-                    .collect(Collectors.toList()));
+            postIdList.setPostIdList(myRooms.stream().map(ChatRoom::getPostId).collect(Collectors.toList()));
+
             List<ChatResponseDTO.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
 
             return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(postInfo, myRooms));
