@@ -14,7 +14,8 @@ public class ChatResponseDTO {
         private Long postId;
         private String status;
         private String title;
-
+        private Long pay;
+        private Long dealId;
     }
 
     @Getter
@@ -26,7 +27,6 @@ public class ChatResponseDTO {
         private String profileImage;
         private String nickName;
         private String accountNumber;
-
     }
 
 }

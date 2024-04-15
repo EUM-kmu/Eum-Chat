@@ -13,10 +13,9 @@ public interface ChatRoomRepository extends MongoRepository<ChatRoom, String> {
     @Query("{'members': ?0}")
     List<ChatRoom> findAllById(String id);
 
-    ChatRoom findMembersById(String chatRoomId);
+    ChatRoom findChatRoomById(String chatRoomId);
 
     // 두 사용자가 모두 포함되어 있고, members 배열의 크기가 2인 chatRoom을 찾는 메서드
     @Query("{'members': {$size: 2, $all: [?0, ?1]}}")
     List<ChatRoom> findOneToOneChatRoomByExactTwoMembers(String myId, String theOtherId);
-
 }

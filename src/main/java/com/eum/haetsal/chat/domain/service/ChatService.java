@@ -1,9 +1,7 @@
 package com.eum.haetsal.chat.domain.service;
 
 import com.eum.haetsal.chat.domain.client.HaetsalClient;
-import com.eum.haetsal.chat.domain.dto.request.ChatPostRequestDto;
 import com.eum.haetsal.chat.domain.dto.request.ChatRequestDTO;
-import com.eum.haetsal.chat.domain.dto.request.ChatUserRequestDto;
 import com.eum.haetsal.chat.domain.dto.response.*;
 import com.eum.haetsal.chat.domain.model.ChatMessage;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
@@ -20,8 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -84,7 +81,7 @@ public class ChatService {
         BaseResponseEntity<String> BAD_REQUEST = isValidChatRoomId(chatRoomId);
         if (BAD_REQUEST != null) return BAD_REQUEST;
 
-        ChatRoom chatRoom = chatRoomRepository.findMembersById(chatRoomId);
+        ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
 
         // 채팅방 있는지 확인
         if(chatRoom == null){
@@ -97,19 +94,40 @@ public class ChatService {
             return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 참여자가 아닙니다.");
         }
 
+        ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList(Collections.singletonList(chatRoom.getPostId()));
+        ChatResponseDTO.PostInfo postInfo = haetsalClient.getChatPost(postIdList).get(0);
+
+        // 채팅 메시지들을 조회
+        List<Message> messages = chatRepository.findMessageByChatRoomId(chatRoomId);
+
+        // userId 목록을 추출
+        List<String> userIds = messages.stream()
+                .map(Message::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+
         // haetsalClient 로부터 userInfo 받아오기
-        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList();
-        userIdList.setUserIdList(chatRoom.getMembers());
-        List<ChatResponseDTO.UserInfo> userInfo = haetsalClient.getChatUser(userIdList);
+        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(userIds);
+        List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
 
-        List<MessageResponseDTO> messages = chatRepository.findByChatRoomId(chatRoomId).stream()
-                .map(form -> new MessageResponseDTO(
-                        form.getUserId(),
-                        form.getMessage(),
-                        form.getCreatedAt()
-                )).collect(Collectors.toList());
+        // userId를 키로 하고 UserInfo를 값으로 하는 맵 생성
+        Map<Long, MessageResponseDTO.SenderInfo> userInfoMap = userInfos.stream()
+                .collect(Collectors.toMap(ChatResponseDTO.UserInfo::getUserId,
+                        userInfo -> new MessageResponseDTO.SenderInfo( // 값 매퍼: UserInfo를 SenderInfo로 변환
+                                userInfo.getUserId(),
+                                userInfo.getProfileImage(),
+                                userInfo.getNickName()
+                        )));
 
-        return new BaseResponseEntity<>(HttpStatus.OK, new ChatUserResponseDto(userInfo, messages));
+        // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
+        List<MessageResponseDTO> messageWithUserInfo =  messages.stream()
+                .map(message -> new MessageResponseDTO(
+                        userInfoMap.get(Long.parseLong(message.getUserId())), // userId에 해당하는 UserInfo 객체
+                        message.getMessage(),
+                        message.getCreatedAt()))
+                .collect(Collectors.toList());
+
+        return new BaseResponseEntity<>(HttpStatus.OK, new ChatUserResponseDto(userInfos, postInfo, messageWithUserInfo));
     }
 
     public BaseResponseEntity<?> createChatRoom(RoomRequestDto dto, String userId) {
@@ -133,8 +151,7 @@ public class ChatService {
             return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "유저가 속한 채팅방이 없습니다.");
 
         }else {
-            ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList();
-            postIdList.setPostIdList(myRooms.stream().map(ChatRoom::getPostId).collect(Collectors.toList()));
+            ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList(myRooms.stream().map(ChatRoom::getPostId).collect(Collectors.toList()));
 
             List<ChatResponseDTO.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
 
@@ -161,7 +178,7 @@ public class ChatService {
             return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
         }
 
-        ChatRoom chatRoom = chatRoomRepository.findMembersById(chatRoomId);
+        ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
 
         // 채팅방 있는지 확인
         if(chatRoom == null){
