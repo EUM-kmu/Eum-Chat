@@ -37,6 +37,16 @@ public class ChatHttpController {
         BaseResponseEntity response = chatService.getChatRooms(userId);
         return response;
     }
+    @GetMapping("/{chatRoomId}")
+    @Operation(summary = "채팅방 내부. 유저가 속한 특정 채팅방의 전체 채팅 내역을 확인합니다.")
+    public BaseResponseEntity<?> getMessagesAndUserInfo(
+            @Parameter(description = "채팅 내역을 확인할 room 의 id", example = "1", required = true)
+            @PathVariable String chatRoomId,
+            @RequestHeader String userId
+    ) {
+        BaseResponseEntity response =  chatService.getMessagesAndUserInfo(chatRoomId, userId);
+        return response;
+    }
 
 
     @PostMapping("/{chatRoomId}/message")
@@ -50,17 +60,6 @@ public class ChatHttpController {
         return response;
     }
 
-    @GetMapping("/{chatRoomId}")
-    @Operation(summary = "채팅방 내부. 유저가 속한 특정 채팅방의 전체 채팅 내역을 확인합니다.")
-    public BaseResponseEntity<?> getMessagesAndUserInfo(
-            @Parameter(description = "채팅 내역을 확인할 room 의 id", example = "1", required = true)
-            @PathVariable String chatRoomId,
-            @RequestHeader String userId
-    ) {
-        BaseResponseEntity response =  chatService.getMessagesAndUserInfo(chatRoomId, userId);
-        return response;
-    }
-
     @GetMapping("/{chatRoomId}/members")
     @Operation(summary = "유저가 속한 특정 채팅방의 멤버 목록을 불러옵니다.")
     public BaseResponseEntity<?> getMembers(
@@ -68,6 +67,17 @@ public class ChatHttpController {
             @RequestHeader String userId
     ) {
         BaseResponseEntity response =  chatService.getMembers(chatRoomId, userId);
+        return response;
+    }
+
+    @PostMapping("/{chatRoomId}/add")
+    @Operation(summary = "특정 채팅방에 새로운 유저를 초대/추가합니다.")
+    public BaseResponseEntity<?> addUser(
+            @PathVariable String chatRoomId,
+            @RequestBody RoomRequestDto dto,
+            @RequestHeader String userId
+    ) {
+        BaseResponseEntity response = chatService.addUser(chatRoomId, dto, userId);
         return response;
     }
 
