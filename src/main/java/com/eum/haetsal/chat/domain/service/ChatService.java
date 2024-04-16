@@ -10,6 +10,7 @@ import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
 import com.eum.haetsal.chat.domain.dto.request.RoomRequestDto;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -43,16 +44,11 @@ public class ChatService {
         try {
             message = chatRepository.save(message);
 
-            try{
-                // 저장된 메시지를 바탕으로 ChatMessage 객체 생성 및 브로드캐스트
-                ChatMessage chatMessage = convertToChatMessage(message);
-                broadcastMessage(chatMessage, chatRoomId);
+            // 저장된 메시지를 바탕으로 ChatMessage 객체 생성 및 브로드캐스트
+            ChatMessage chatMessage = convertToChatMessage(message);
+            broadcastMessage(chatMessage, chatRoomId);
 
-                return new BaseResponseEntity<>(HttpStatus.OK);
-
-            }catch (Exception e){
-                return new BaseResponseEntity<>(e);
-            }
+            return new BaseResponseEntity<>(HttpStatus.OK);
 
         } catch (Exception e){
             return new BaseResponseEntity<>(e);
@@ -93,41 +89,47 @@ public class ChatService {
         if(!isContained){
             return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 참여자가 아닙니다.");
         }
+        try {
 
-        ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList(Collections.singletonList(chatRoom.getPostId()));
-        ChatResponseDTO.PostInfo postInfo = haetsalClient.getChatPost(postIdList).get(0);
+            ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList(Collections.singletonList(chatRoom.getPostId()));
+            ChatResponseDTO.PostInfo postInfo = haetsalClient.getChatPost(postIdList).get(0);
 
-        // 채팅 메시지들을 조회
-        List<Message> messages = chatRepository.findMessageByChatRoomId(chatRoomId);
+            // 채팅 메시지들을 조회
+            List<Message> messages = chatRepository.findMessageByChatRoomId(chatRoomId);
 
-        // userId 목록을 추출
-        List<String> userIds = messages.stream()
-                .map(Message::getUserId)
-                .distinct()
-                .collect(Collectors.toList());
+            // userId 목록을 추출
+            List<String> userIds = messages.stream()
+                    .map(Message::getUserId)
+                    .distinct()
+                    .collect(Collectors.toList());
 
-        // haetsalClient 로부터 userInfo 받아오기
-        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(userIds);
-        List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+            // haetsalClient 로부터 userInfo 받아오기
+            ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(userIds);
+            List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
 
-        // userId를 키로 하고 UserInfo를 값으로 하는 맵 생성
-        Map<Long, MessageResponseDTO.SenderInfo> userInfoMap = userInfos.stream()
-                .collect(Collectors.toMap(ChatResponseDTO.UserInfo::getUserId,
-                        userInfo -> new MessageResponseDTO.SenderInfo( // 값 매퍼: UserInfo를 SenderInfo로 변환
-                                userInfo.getUserId(),
-                                userInfo.getProfileImage(),
-                                userInfo.getNickName()
-                        )));
+            // userId를 키로 하고 UserInfo를 값으로 하는 맵 생성
+            Map<Long, MessageResponseDTO.SenderInfo> userInfoMap = userInfos.stream()
+                    .collect(Collectors.toMap(ChatResponseDTO.UserInfo::getUserId,
+                            userInfo -> new MessageResponseDTO.SenderInfo( // 값 매퍼: UserInfo를 SenderInfo로 변환
+                                    userInfo.getUserId(),
+                                    userInfo.getProfileImage(),
+                                    userInfo.getNickName()
+                            )));
 
-        // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
-        List<MessageResponseDTO> messageWithUserInfo =  messages.stream()
-                .map(message -> new MessageResponseDTO(
-                        userInfoMap.get(Long.parseLong(message.getUserId())), // userId에 해당하는 UserInfo 객체
-                        message.getMessage(),
-                        message.getCreatedAt()))
-                .collect(Collectors.toList());
+            // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
+            List<MessageResponseDTO> messageWithUserInfo = messages.stream()
+                    .map(message -> new MessageResponseDTO(
+                            userInfoMap.get(Long.parseLong(message.getUserId())), // userId에 해당하는 UserInfo 객체
+                            message.getMessage(),
+                            message.getCreatedAt()))
+                    .collect(Collectors.toList());
 
-        return new BaseResponseEntity<>(HttpStatus.OK, new ChatUserResponseDto(userInfos, postInfo, messageWithUserInfo));
+            return new BaseResponseEntity<>(HttpStatus.OK, new ChatUserResponseDto(userInfos, postInfo, messageWithUserInfo));
+        }catch (FeignException e) {
+            return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/users 혹은 /chat/posts)를 불러오는 데 실패했습니다:  " + e.getMessage());
+        } catch (Exception e) {
+            return new BaseResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR, "채팅 서버 에러: " + e.getMessage());
+        }
     }
 
     public BaseResponseEntity<?> createChatRoom(RoomRequestDto dto, String userId) {
@@ -152,10 +154,13 @@ public class ChatService {
 
         }else {
             ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList(myRooms.stream().map(ChatRoom::getPostId).collect(Collectors.toList()));
+            try {
+                List<ChatResponseDTO.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
 
-            List<ChatResponseDTO.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
-
-            return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(postInfo, myRooms));
+                return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(postInfo, myRooms));
+            }catch (FeignException e) {
+                return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/posts)를 불러오는 데 실패했습니다:  " + e.getMessage());
+            }
         }
     }
 
@@ -192,5 +197,49 @@ public class ChatService {
         }
 
         return new BaseResponseEntity<>(HttpStatus.OK, new MemberIdsResponseDto(chatRoom.getMembers()));
+    }
+
+    public BaseResponseEntity addUser(String chatRoomId, RoomRequestDto dto, String userId) {
+
+        if(chatRoomId.length() != 24){
+            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
+        }
+
+        ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
+
+        // 채팅방 있는지 확인
+        if(chatRoom == null){
+            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "해당 채팅방이 없습니다.");
+        }
+
+        // 해당 채팅방에 유저가 속해 있는지 확인
+        boolean isContained = chatRoom.getMembers().get(0).equals(userId);
+        if(!isContained){
+            return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 작성자가 아닙니다. 유저 추가 권한이 없습니다.");
+        }
+
+        List<String> newMembers = dto.getMemberIds();
+        chatRoom.getMembers().addAll(newMembers);
+
+        try{
+            chatRoomRepository.save(chatRoom);
+
+            try {
+                ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(newMembers);
+                List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+
+                userInfos.forEach(userInfo -> {
+                    ChatMessage entryMessage = new ChatMessage(ChatMessage.MessageType.JOIN, userInfo + "님이 입장했습니다.");
+                    broadcastMessage(entryMessage, chatRoomId);
+                });
+
+            } catch (FeignException.FeignClientException fe){
+                return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/users)를 불러오는 데 실패했습니다.: " + fe.getMessage());
+            }
+
+            return new BaseResponseEntity<>(HttpStatus.OK, new RoomResponseDto(chatRoom));
+        }catch (Exception e){
+            return new BaseResponseEntity<>(e);
+        }
     }
 }
