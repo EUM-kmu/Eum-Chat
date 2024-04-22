@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "haetsal-service", url = "http://223.130.146.39/")
+@FeignClient(name = "haetsal-service", url = "http://${HAETSAL_IP}:${HAETSAL_PORT}")
 public interface HaetsalClient {
 
     @PostMapping ("/haetsal-service/api/v2/chat/posts")
