@@ -17,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
     }
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
+        registry.addMapping("/chat-service/api/**")
                 .allowedOrigins("http://localhost:3000")
                 .allowedMethods(ALLOWED_METHOD_NAMES.split(","))
                 .allowedHeaders("*") // "userId", "Authorization" 등..
