@@ -20,16 +20,11 @@ public class HaetsalService {
 
     private final ChatRoomRepository chatRoomRepository;
 
-    public BaseResponseEntity getOneToOneChatRooms(String myId, String theOtherId) {
-
-        // 유저 id 제대로 입력했는지 확인 -> 다른 서버에 요청
+    public List<OneToOneChatRoomsResponseDto> getOneToOneChatRooms(String myId, String theOtherId) {
 
         List<ChatRoom> OneToOneChatRooms = chatRoomRepository.findOneToOneChatRoomByExactTwoMembers(myId, theOtherId);
+        System.out.println(OneToOneChatRooms);
 
-        if(OneToOneChatRooms.isEmpty()){
-            return new BaseResponseEntity<>(HttpStatus.OK, "두 사람의 1:1 채팅방이 존재하지 않습니다.");
-        }
-
-        return new BaseResponseEntity<>(HttpStatus.OK, OneToOneChatRooms.stream().map(OneToOneChatRoomsResponseDto::new));
+        return OneToOneChatRooms.stream().map(OneToOneChatRoomsResponseDto::new).toList();
     }
 }

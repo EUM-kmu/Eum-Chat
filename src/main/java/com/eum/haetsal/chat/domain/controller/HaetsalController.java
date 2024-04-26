@@ -1,7 +1,6 @@
 package com.eum.haetsal.chat.domain.controller;
 
-import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
-import com.eum.haetsal.chat.domain.service.ChatService;
+import com.eum.haetsal.chat.domain.dto.response.OneToOneChatRoomsResponseDto;
 import com.eum.haetsal.chat.domain.service.HaetsalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -21,13 +22,12 @@ public class HaetsalController {
 
     private final HaetsalService haetsalService;
 
-    @GetMapping("/OneToOneChat")
+    @GetMapping("/oneToOneChat")
     @Operation(summary = "두 유저가 1:1 채팅 중인 채팅방의 id(s)를 불러옵니다.")
-    public BaseResponseEntity<?> getOneToOneChatRooms(
+    public List<OneToOneChatRoomsResponseDto> getOneToOneChatRooms(
             @RequestParam String myId,
             @RequestParam String theOtherId
     ) {
-        BaseResponseEntity response =  haetsalService.getOneToOneChatRooms(myId, theOtherId);
-        return response;
+        return haetsalService.getOneToOneChatRooms(myId, theOtherId);
     }
 }
