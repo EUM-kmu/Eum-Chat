@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: eum-chat
+
   data:
     mongodb:
       host: mongodb
@@ -15,3 +18,17 @@ logging:
 
 server:
   port: 8080
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      #      defaultZone: http://host.docker.internal:8761/eureka
+      defaultZone: http://223.130.146.39:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+  logging:
+    level:
+      com.eum.haetsal: debug
