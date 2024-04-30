@@ -134,7 +134,8 @@ public class ChatService {
 
     public BaseResponseEntity<?> createChatRoom(RoomRequestDto dto, String userId) {
 
-        ChatRoom chatRoom = new ChatRoom(dto.getPostId(), dto.getMemberIds());
+//        ChatRoom chatRoom = new ChatRoom(dto.getPostId(), dto.getMemberIds(), userId);
+        ChatRoom chatRoom = new ChatRoom(dto, userId);
         chatRoom.getMembers().add(0,userId);
 
         try{

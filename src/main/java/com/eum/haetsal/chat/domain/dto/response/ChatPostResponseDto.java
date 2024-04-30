@@ -12,6 +12,7 @@ public class ChatPostResponseDto {
     private String status;
     private String title;
     private String roomId;
+    private String creatorId;
     private int memberCount;
 
     public ChatPostResponseDto(ChatResponseDTO.PostInfo dto, ChatRoom chatRoom) {
@@ -19,6 +20,7 @@ public class ChatPostResponseDto {
         this.status = dto.getStatus();
         this.title = dto.getTitle();
         this.roomId = chatRoom.getId();
+        this.creatorId = chatRoom.getCreatorId();
         this.memberCount = chatRoom.getMembers().size();
     }
 }
