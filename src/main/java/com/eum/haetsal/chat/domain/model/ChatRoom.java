@@ -1,5 +1,6 @@
 package com.eum.haetsal.chat.domain.model;
 
+import com.eum.haetsal.chat.domain.dto.request.RoomRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @Document("chatRoom")
+@NoArgsConstructor
 public class ChatRoom {
 
     @Id
@@ -22,10 +24,13 @@ public class ChatRoom {
 
     private int postId;
 
+    private String creatorId;
+
     private List<String> members;
 
-    public ChatRoom(int postId, List<String> members) {
-        this.postId = postId;
-        this.members = members;
+    public ChatRoom(RoomRequestDto dto, String userId) {
+        this.postId = dto.getPostId();
+        this.creatorId = userId;
+        this.members = dto.getMemberIds();
     }
 }
