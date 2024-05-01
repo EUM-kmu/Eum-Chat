@@ -200,7 +200,7 @@ public class ChatService {
         return new BaseResponseEntity<>(HttpStatus.OK, new MemberIdsResponseDto(chatRoom.getMembers()));
     }
 
-    public BaseResponseEntity addUser(String chatRoomId, RoomRequestDto dto, String userId) {
+    public BaseResponseEntity updateMembers(String chatRoomId, RoomRequestDto dto, String userId) {
 
         if(chatRoomId.length() != 24){
             return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
@@ -219,20 +219,21 @@ public class ChatService {
             return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 작성자가 아닙니다. 유저 추가 권한이 없습니다.");
         }
 
-        List<String> newMembers = dto.getMemberIds();
-        chatRoom.getMembers().addAll(newMembers);
+        List<String> updatedList = dto.getMemberIds();
+        updatedList.add(0,userId);
+        List<String> existingList = chatRoom.getMembers();
+
+        List<String> Added = findAddedMembers(updatedList, existingList);
+        List<String> removed = findRemovedMembers(updatedList, existingList);
+
+        chatRoom.setMembers(updatedList);
 
         try{
             chatRoomRepository.save(chatRoom);
 
             try {
-                ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(newMembers);
-                List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
-
-                userInfos.forEach(userInfo -> {
-                    ChatMessage entryMessage = new ChatMessage(ChatMessage.MessageType.JOIN, userInfo + "님이 입장했습니다.");
-                    broadcastMessage(entryMessage, chatRoomId);
-                });
+                broadcastStatusMessages(removed, ChatMessage.MessageType.LEAVE, "님이 퇴장했습니다.", chatRoomId);
+                broadcastStatusMessages(Added, ChatMessage.MessageType.JOIN, "님이 입장했습니다.", chatRoomId);
 
             } catch (FeignException.FeignClientException fe){
                 return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/users)를 불러오는 데 실패했습니다.: " + fe.getMessage());
@@ -242,5 +243,27 @@ public class ChatService {
         }catch (Exception e){
             return new BaseResponseEntity<>(e);
         }
+    }
+
+    private void broadcastStatusMessages(List<String> removed, ChatMessage.MessageType leave, String x, String chatRoomId) {
+        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(removed);
+        List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+
+        userInfos.forEach(userInfo -> {
+            ChatMessage entryMessage = new ChatMessage(leave, userInfo + x);
+            broadcastMessage(entryMessage, chatRoomId);
+        });
+    }
+
+    public List<String> findAddedMembers(List<String> updatedList, List<String> existingList) {
+        return updatedList.stream()
+                .filter(member -> !existingList.contains(member))
+                .collect(Collectors.toList());
+    }
+
+    public List<String> findRemovedMembers(List<String> updatedList, List<String> existingList) {
+        return existingList.stream()
+                .filter(member -> !updatedList.contains(member))
+                .collect(Collectors.toList());
     }
 }
