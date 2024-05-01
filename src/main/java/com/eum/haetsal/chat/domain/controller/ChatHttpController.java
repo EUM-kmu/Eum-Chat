@@ -69,15 +69,16 @@ public class ChatHttpController {
         BaseResponseEntity response =  chatService.getMembers(chatRoomId, userId);
         return response;
     }
+    
 
-    @PostMapping("/{chatRoomId}/add")
-    @Operation(summary = "특정 채팅방에 새로운 유저를 초대/추가합니다.")
-    public BaseResponseEntity<?> addUser(
+    @PatchMapping("/{chatRoomId}/members")
+    @Operation(summary = "특정 채팅방에 새로운 유저를 추가/삭제합니다.")
+    public BaseResponseEntity<?> updateMembers(
             @PathVariable String chatRoomId,
             @RequestBody RoomRequestDto dto,
             @RequestHeader String userId
     ) {
-        BaseResponseEntity response = chatService.addUser(chatRoomId, dto, userId);
+        BaseResponseEntity response = chatService.updateMembers(chatRoomId, dto, userId);
         return response;
     }
 
