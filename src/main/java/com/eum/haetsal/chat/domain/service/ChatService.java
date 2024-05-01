@@ -3,7 +3,6 @@ package com.eum.haetsal.chat.domain.service;
 import com.eum.haetsal.chat.domain.client.HaetsalClient;
 import com.eum.haetsal.chat.domain.dto.request.ChatRequestDTO;
 import com.eum.haetsal.chat.domain.dto.response.*;
-import com.eum.haetsal.chat.domain.model.ChatMessage;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
 import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
@@ -14,11 +13,9 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,7 +27,7 @@ public class ChatService {
 
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final BroadcastService broadcastService;
 
     private final HaetsalClient haetsalClient;
 
@@ -39,14 +36,11 @@ public class ChatService {
         BaseResponseEntity<String> BAD_REQUEST = isValidChatRoomId(chatRoomId);
         if (BAD_REQUEST != null) return BAD_REQUEST;
 
-        Message message = new Message(chatRoomId, userId,content, LocalDateTime.now());
-
         try {
-            message = chatRepository.save(message);
+            Message message = Message.from(chatRoomId,userId, Message.MessageType.CHAT, content);
+            chatRepository.save(message);
 
-            // 저장된 메시지를 바탕으로 ChatMessage 객체 생성 및 브로드캐스트
-            ChatMessage chatMessage = convertToChatMessage(message);
-            broadcastMessage(chatMessage, chatRoomId);
+            broadcastService.broadcastMessage(message, chatRoomId);
 
             return new BaseResponseEntity<>(HttpStatus.OK);
 
@@ -61,15 +55,6 @@ public class ChatService {
             return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
         }
         return null;
-    }
-
-    private ChatMessage convertToChatMessage(Message message) {
-        return new ChatMessage(message.getUserId(),ChatMessage.MessageType.CHAT, message.getMessage(), message.getCreatedAt() );
-    }
-
-    private void broadcastMessage(ChatMessage chatMessage, String chatRoomId) {
-        // 특정 채팅방 구독자들에게 메시지를 브로드캐스트
-        messagingTemplate.convertAndSend("/sub/room/" + chatRoomId, chatMessage);
     }
 
     public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId, String userId) {
@@ -134,7 +119,6 @@ public class ChatService {
 
     public BaseResponseEntity<?> createChatRoom(RoomRequestDto dto, String userId) {
 
-//        ChatRoom chatRoom = new ChatRoom(dto.getPostId(), dto.getMemberIds(), userId);
         ChatRoom chatRoom = new ChatRoom(dto, userId);
         chatRoom.getMembers().add(0,userId);
 
@@ -232,8 +216,8 @@ public class ChatService {
             chatRoomRepository.save(chatRoom);
 
             try {
-                broadcastStatusMessages(removed, ChatMessage.MessageType.LEAVE, "님이 퇴장했습니다.", chatRoomId);
-                broadcastStatusMessages(Added, ChatMessage.MessageType.JOIN, "님이 입장했습니다.", chatRoomId);
+                broadcastService.broadcastStatusMessages(removed, Message.MessageType.LEAVE, " 님이 퇴장했습니다.", chatRoomId);
+                broadcastService.broadcastStatusMessages(Added, Message.MessageType.JOIN, " 님이 입장했습니다.", chatRoomId);
 
             } catch (FeignException.FeignClientException fe){
                 return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/users)를 불러오는 데 실패했습니다.: " + fe.getMessage());
@@ -243,16 +227,6 @@ public class ChatService {
         }catch (Exception e){
             return new BaseResponseEntity<>(e);
         }
-    }
-
-    private void broadcastStatusMessages(List<String> removed, ChatMessage.MessageType leave, String x, String chatRoomId) {
-        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(removed);
-        List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
-
-        userInfos.forEach(userInfo -> {
-            ChatMessage entryMessage = new ChatMessage(leave, userInfo + x);
-            broadcastMessage(entryMessage, chatRoomId);
-        });
     }
 
     public List<String> findAddedMembers(List<String> updatedList, List<String> existingList) {

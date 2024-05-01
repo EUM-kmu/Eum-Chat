@@ -1,9 +1,6 @@
 package com.eum.haetsal.chat.domain.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -15,6 +12,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Document(collection = "message")
+@Builder
+@AllArgsConstructor
 public class Message {
 
     @Id
@@ -27,6 +26,9 @@ public class Message {
     @Field("user_id")
     private String userId;
 
+    @Field("message_type")
+    private MessageType type;
+
     @Field("message")
     private String message;
 
@@ -34,10 +36,20 @@ public class Message {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    public Message(String chatRoomId, String userId, String message, LocalDateTime createdAt) {
-        this.chatRoomId = chatRoomId;
-        this.userId = userId;
-        this.message = message;
-        this.createdAt = createdAt;
+    public enum MessageType {
+        CHAT,
+        JOIN,
+        LEAVE
+    }
+
+    public static Message from(String chatRoomId, String userId, MessageType type, String message){
+        return Message.builder()
+                .chatRoomId(chatRoomId)
+                .userId(userId)
+                .type(type)
+                .message(message)
+                .createdAt(LocalDateTime.now())
+                .build();
+
     }
 }
