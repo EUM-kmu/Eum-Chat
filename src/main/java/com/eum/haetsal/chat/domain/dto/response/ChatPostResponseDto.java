@@ -13,6 +13,9 @@ public class ChatPostResponseDto {
     private String title;
     private String roomId;
     private String creatorId;
+    private String creatorNickname;
+    private String startDate;
+    private String location;
     private int memberCount;
 
     public ChatPostResponseDto(ChatResponseDTO.PostInfo dto, ChatRoom chatRoom) {
@@ -21,6 +24,9 @@ public class ChatPostResponseDto {
         this.title = dto.getTitle();
         this.roomId = chatRoom.getId();
         this.creatorId = chatRoom.getCreatorId();
+        this.creatorNickname = dto.getUserInfo().getNickName();
+        this.startDate = dto.getStartDate();
+        this.location = dto.getLocation();
         this.memberCount = chatRoom.getMembers().size();
     }
 }
