@@ -3,6 +3,7 @@ package com.eum.haetsal.chat.domain.controller;
 import com.eum.haetsal.chat.domain.dto.request.RoomRequestDto;
 import com.eum.haetsal.chat.domain.service.ChatService;
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
+import com.eum.haetsal.chat.domain.service.ValidationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-// Http 통신을 위한 controller
 
 @Slf4j
 @RestController
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Chat" ,description = "chat api")
 public class ChatHttpController {
 
+    private final ValidationService validationService;
     private final ChatService chatService;
 
     @PostMapping("")
@@ -37,6 +38,7 @@ public class ChatHttpController {
         BaseResponseEntity response = chatService.getChatRooms(userId);
         return response;
     }
+
     @GetMapping("/{chatRoomId}")
     @Operation(summary = "채팅방 내부. 유저가 속한 특정 채팅방의 전체 채팅 내역을 확인합니다.")
     public BaseResponseEntity<?> getMessagesAndUserInfo(
@@ -44,7 +46,13 @@ public class ChatHttpController {
             @PathVariable String chatRoomId,
             @RequestHeader String userId
     ) {
-        BaseResponseEntity response =  chatService.getMessagesAndUserInfo(chatRoomId, userId);
+
+        BaseResponseEntity<String> validateResponse = validationService.validateChatRoomAccess(chatRoomId, userId);
+        if(validateResponse != null){
+            return validateResponse;
+        }
+
+        BaseResponseEntity response =  chatService.getMessagesAndUserInfo(chatRoomId);
         return response;
     }
 
@@ -56,6 +64,12 @@ public class ChatHttpController {
             @RequestHeader String userId,
             @PathVariable String chatRoomId
     ) {
+
+        BaseResponseEntity<String> validateResponse = validationService.validateChatRoomAccess(chatRoomId, userId);
+        if(validateResponse != null){
+            return validateResponse;
+        }
+
         BaseResponseEntity response = chatService.saveMessage(message, userId, chatRoomId);
         return response;
     }
@@ -66,7 +80,13 @@ public class ChatHttpController {
             @PathVariable String chatRoomId,
             @RequestHeader String userId
     ) {
-        BaseResponseEntity response =  chatService.getMembers(chatRoomId, userId);
+
+        BaseResponseEntity<String> validateResponse = validationService.validateChatRoomAccess(chatRoomId, userId);
+        if(validateResponse != null){
+            return validateResponse;
+        }
+
+        BaseResponseEntity response =  chatService.getMembers(chatRoomId);
         return response;
     }
     
@@ -78,6 +98,12 @@ public class ChatHttpController {
             @RequestBody RoomRequestDto dto,
             @RequestHeader String userId
     ) {
+
+        BaseResponseEntity<String> validateResponse = validationService.validateChatRoomAccess(chatRoomId, userId);
+        if(validateResponse != null){
+            return validateResponse;
+        }
+
         BaseResponseEntity response = chatService.updateMembers(chatRoomId, dto, userId);
         return response;
     }

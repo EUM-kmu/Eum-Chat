@@ -33,9 +33,6 @@ public class ChatService {
 
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
 
-        BaseResponseEntity<String> BAD_REQUEST = isValidChatRoomId(chatRoomId);
-        if (BAD_REQUEST != null) return BAD_REQUEST;
-
         try {
             Message message = Message.from(chatRoomId,userId, Message.MessageType.CHAT, content);
             chatRepository.save(message);
@@ -50,31 +47,10 @@ public class ChatService {
 
     }
 
-    private static BaseResponseEntity<String> isValidChatRoomId(String chatRoomId) {
-        if(chatRoomId.length() != 24){
-            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
-        }
-        return null;
-    }
-
-    public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId, String userId) {
-
-        BaseResponseEntity<String> BAD_REQUEST = isValidChatRoomId(chatRoomId);
-        if (BAD_REQUEST != null) return BAD_REQUEST;
-
-        ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
-
-        // 채팅방 있는지 확인
-        if(chatRoom == null){
-            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "해당 채팅방이 없습니다.");
-        }
-
-        // 해당 채팅방에 유저가 속해 있는지 확인
-        boolean isContained = chatRoom.getMembers().contains(userId);
-        if(!isContained){
-            return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 참여자가 아닙니다.");
-        }
+    public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId) {
         try {
+
+            ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
 
             ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList(Collections.singletonList(chatRoom.getPostId()));
             ChatResponseDTO.PostInfo postInfo = haetsalClient.getChatPost(postIdList).get(0);
@@ -125,6 +101,7 @@ public class ChatService {
         try{
             chatRoomRepository.save(chatRoom);
             return new BaseResponseEntity<>(HttpStatus.OK, new RoomResponseDto(chatRoom));
+
         }catch (Exception e){
             return new BaseResponseEntity<>(e);
         }
@@ -150,6 +127,7 @@ public class ChatService {
     }
 
     private List<ChatPostResponseDto> createChatPostResponseDtoList(List<ChatResponseDTO.PostInfo> requests, List<ChatRoom> rooms) {
+
         List<ChatPostResponseDto> data = new ArrayList<>();
 
         for (int i = 0; i < rooms.size(); i++) {
@@ -162,46 +140,16 @@ public class ChatService {
         return data;
     }
 
-    public BaseResponseEntity getMembers(String chatRoomId, String userId) {
-
-        if(chatRoomId.length() != 24){
-            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
-        }
+    public BaseResponseEntity getMembers(String chatRoomId) {
 
         ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
-
-        // 채팅방 있는지 확인
-        if(chatRoom == null){
-            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "해당 채팅방이 없습니다.");
-        }
-
-        // 해당 채팅방에 유저가 속해 있는지 확인
-        boolean isContained = chatRoom.getMembers().contains(userId);
-        if(!isContained){
-            return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 참여자가 아닙니다.");
-        }
 
         return new BaseResponseEntity<>(HttpStatus.OK, new MemberIdsResponseDto(chatRoom.getMembers()));
     }
 
     public BaseResponseEntity updateMembers(String chatRoomId, RoomRequestDto dto, String userId) {
 
-        if(chatRoomId.length() != 24){
-            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "chatRoomId를 확인해주세요.");
-        }
-
         ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
-
-        // 채팅방 있는지 확인
-        if(chatRoom == null){
-            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "해당 채팅방이 없습니다.");
-        }
-
-        // 해당 채팅방에 유저가 속해 있는지 확인
-        boolean isContained = chatRoom.getMembers().get(0).equals(userId);
-        if(!isContained){
-            return new BaseResponseEntity<>(HttpStatus.FORBIDDEN, "해당 채팅방의 작성자가 아닙니다. 유저 추가 권한이 없습니다.");
-        }
 
         List<String> updatedList = dto.getMemberIds();
         updatedList.add(0,userId);
