@@ -61,6 +61,7 @@ public class ChatService {
             // userId 목록을 추출
             List<String> userIds = messages.stream()
                     .map(Message::getUserId)
+                    .filter(Objects::nonNull)
                     .distinct()
                     .collect(Collectors.toList());
 
@@ -79,10 +80,19 @@ public class ChatService {
 
             // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
             List<MessageResponseDTO> messageWithUserInfo = messages.stream()
-                    .map(message -> new MessageResponseDTO(
-                            userInfoMap.get(Long.parseLong(message.getUserId())), // userId에 해당하는 UserInfo 객체
-                            message.getMessage(),
-                            message.getCreatedAt()))
+                    .map(message -> {
+                        Long userId = Optional.ofNullable(message.getUserId())  // message.getUserId()가 null일 수 있음
+                                .map(Long::parseLong)  // null이 아니면 Long으로 파싱
+                                .orElse(null);  // null이면 null 반환
+
+                        MessageResponseDTO.SenderInfo senderInfo = userId != null ? userInfoMap.get(userId) : null;  // userId가 null이 아니면 맵에서 정보 검색, null이면 null
+
+                        return new MessageResponseDTO(
+                                senderInfo,  // userInfoMap에서 검색된 SenderInfo 객체 또는 null
+                                message.getType(),
+                                message.getMessage(),
+                                message.getCreatedAt());
+                    })
                     .collect(Collectors.toList());
 
             return new BaseResponseEntity<>(HttpStatus.OK, new ChatUserResponseDto(userInfos, postInfo, messageWithUserInfo));

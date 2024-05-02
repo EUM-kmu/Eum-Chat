@@ -1,5 +1,6 @@
 package com.eum.haetsal.chat.domain.dto.response;
 
+import com.eum.haetsal.chat.domain.model.Message;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,20 +10,18 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class MessageResponseDTO {
 
     @Schema(description = "보내는 사람 정보" , example = "1234")
     private SenderInfo senderInfo;
 
+    @Schema(description = "채팅 메시지 타입" , example = "CHAT/JOIN/LEAVE")
+    private Message.MessageType type;
+
     @Schema(description = "채팅 메시지 내용" , example = "안녕하세요~~")
     private String message;
     private LocalDateTime createdAt;
-
-    public MessageResponseDTO(SenderInfo senderInfo, String message, LocalDateTime createdAt) {
-        this.senderInfo = senderInfo;
-        this.message = message;
-        this.createdAt = createdAt;
-    }
 
     @Getter
     @Setter
