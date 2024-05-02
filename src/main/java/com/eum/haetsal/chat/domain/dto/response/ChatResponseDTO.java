@@ -12,10 +12,15 @@ public class ChatResponseDTO {
     @AllArgsConstructor
     public static class PostInfo{
         private Long postId;
-        private String status;
         private String title;
-        private Long pay;
+        private String content;
+        private String location;
+        private String startDate;
+        private String  createdDate;
+        private String status;
         private Long dealId;
+        private Long pay;
+        private UserInfo userInfo;
     }
 
     @Getter
@@ -26,6 +31,7 @@ public class ChatResponseDTO {
         private Long profileId;
         private String profileImage;
         private String nickName;
+        private String address;
         private String accountNumber;
     }
 
