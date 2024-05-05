@@ -30,5 +30,6 @@ public class MessageResponseDTO {
         private Long userId;
         private String profileImage;
         private String nickName;
+        private boolean isDeleted;
     }
 }

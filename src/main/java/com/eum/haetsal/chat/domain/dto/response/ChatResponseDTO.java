@@ -33,6 +33,7 @@ public class ChatResponseDTO {
         private String nickName;
         private String address;
         private String accountNumber;
+        private boolean deleted;
     }
 
 }
