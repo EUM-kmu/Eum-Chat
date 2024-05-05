@@ -75,7 +75,8 @@ public class ChatService {
                             userInfo -> new MessageResponseDTO.SenderInfo( // 값 매퍼: UserInfo를 SenderInfo로 변환
                                     userInfo.getUserId(),
                                     userInfo.getProfileImage(),
-                                    userInfo.getNickName()
+                                    userInfo.getNickName(),
+                                    userInfo.isDeleted()
                             )));
 
             // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
