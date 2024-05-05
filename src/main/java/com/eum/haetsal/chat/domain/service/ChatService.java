@@ -144,11 +144,33 @@ public class ChatService {
         for (int i = 0; i < rooms.size(); i++) {
             ChatResponseDTO.PostInfo request = requests.get(i);
             ChatRoom room = rooms.get(i);
-            ChatPostResponseDto responseDto = new ChatPostResponseDto(request, room);
+
+            boolean isBlockedRoom = false;
+            // 일대일 채팅의 경우
+            if(room.getMembers().size() == 2){
+                isBlockedRoom = isBlockedRoom(room.getMembers().get(1), isBlockedRoom);
+
+            }else{ // 일대다 채팅의 경우
+                isBlockedRoom = isBlockedRoom(room.getCreatorId(), isBlockedRoom);
+
+            }
+            ChatPostResponseDto responseDto = new ChatPostResponseDto(request, room, isBlockedRoom);
             data.add(responseDto);
         }
 
         return data;
+    }
+
+    private boolean isBlockedRoom(String memberId, boolean isBlockedRoom) {
+        List<String> list = new ArrayList<>();
+        list.add(memberId);
+
+        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(list);
+        List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+        if(userInfos.get(0).isDeleted()){
+            isBlockedRoom = true;
+        }
+        return isBlockedRoom;
     }
 
     public BaseResponseEntity getMembers(String chatRoomId) {
