@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-public class ChatResponseDTO {
+public class HaetsalResponseDto {
 
     @Getter
     @Setter

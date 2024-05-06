@@ -1,6 +1,5 @@
 package com.eum.haetsal.chat.domain.dto.response;
 
-import com.eum.haetsal.chat.domain.dto.request.ChatPostRequestDto;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +18,7 @@ public class ChatPostResponseDto {
     private String location;
     private int memberCount;
 
-    public ChatPostResponseDto(ChatResponseDTO.PostInfo dto, ChatRoom chatRoom, boolean isBlockedRoom) {
+    public ChatPostResponseDto(HaetsalResponseDto.PostInfo dto, ChatRoom chatRoom, boolean isBlockedRoom) {
         this.postId = dto.getPostId();
         this.status = dto.getStatus();
         this.title = dto.getTitle();

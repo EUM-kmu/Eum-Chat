@@ -7,7 +7,7 @@ import lombok.Setter;
 
 import java.util.List;
 
-public class ChatRequestDTO {
+public class HaetsalRequestDto {
     @Getter
     @Setter
     @AllArgsConstructor
