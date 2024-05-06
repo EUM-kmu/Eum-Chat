@@ -1,15 +1,8 @@
 package com.eum.haetsal.chat.domain.dto.response;
 
-import com.eum.haetsal.chat.domain.dto.request.ChatUserRequestDto;
-import com.eum.haetsal.chat.domain.model.Message;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -17,14 +10,14 @@ import java.util.List;
 @Setter
 public class ChatUserResponseDto {
 
-    List<ChatResponseDTO.UserInfo> userInfos;
+    List<HaetsalResponseDto.UserInfo> userInfos;
 
-    ChatResponseDTO.PostInfo postInfo;
+    HaetsalResponseDto.PostInfo postInfo;
 
     List<MessageResponseDTO> messages;
 
-    public ChatUserResponseDto(List<ChatResponseDTO.UserInfo> userInfos,
-                               ChatResponseDTO.PostInfo postInfo,
+    public ChatUserResponseDto(List<HaetsalResponseDto.UserInfo> userInfos,
+                               HaetsalResponseDto.PostInfo postInfo,
                                List<MessageResponseDTO> messages) {
         this.userInfos = userInfos;
         this.postInfo = postInfo;

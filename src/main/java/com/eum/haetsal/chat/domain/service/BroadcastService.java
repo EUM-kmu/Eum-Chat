@@ -2,8 +2,8 @@ package com.eum.haetsal.chat.domain.service;
 
 
 import com.eum.haetsal.chat.domain.client.HaetsalClient;
-import com.eum.haetsal.chat.domain.dto.request.ChatRequestDTO;
-import com.eum.haetsal.chat.domain.dto.response.ChatResponseDTO;
+import com.eum.haetsal.chat.domain.dto.request.HaetsalRequestDto;
+import com.eum.haetsal.chat.domain.dto.response.HaetsalResponseDto;
 import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +31,8 @@ public class BroadcastService {
 
      void broadcastStatusMessages(List<String> removed, Message.MessageType type, String x, String chatRoomId) {
 
-        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(removed);
-        List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+        HaetsalRequestDto.UserIdList userIdList = new HaetsalRequestDto.UserIdList(removed);
+        List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
 
         userInfos.forEach(userInfo -> {
             Message message = chatRepository.save(Message.from(chatRoomId, null, type, userInfo.getNickName() + x));

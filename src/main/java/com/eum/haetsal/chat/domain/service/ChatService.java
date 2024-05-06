@@ -1,7 +1,7 @@
 package com.eum.haetsal.chat.domain.service;
 
 import com.eum.haetsal.chat.domain.client.HaetsalClient;
-import com.eum.haetsal.chat.domain.dto.request.ChatRequestDTO;
+import com.eum.haetsal.chat.domain.dto.request.HaetsalRequestDto;
 import com.eum.haetsal.chat.domain.dto.response.*;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
 import com.eum.haetsal.chat.domain.model.Message;
@@ -52,8 +52,8 @@ public class ChatService {
 
             ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
 
-            ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList(Collections.singletonList(chatRoom.getPostId()));
-            ChatResponseDTO.PostInfo postInfo = haetsalClient.getChatPost(postIdList).get(0);
+            HaetsalRequestDto.PostIdList postIdList = new HaetsalRequestDto.PostIdList(Collections.singletonList(chatRoom.getPostId()));
+            HaetsalResponseDto.PostInfo postInfo = haetsalClient.getChatPost(postIdList).get(0);
 
             // 채팅 메시지들을 조회
             List<Message> messages = chatRepository.findMessageByChatRoomId(chatRoomId);
@@ -66,12 +66,12 @@ public class ChatService {
                     .collect(Collectors.toList());
 
             // haetsalClient 로부터 userInfo 받아오기
-            ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(userIds);
-            List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+            HaetsalRequestDto.UserIdList userIdList = new HaetsalRequestDto.UserIdList(userIds);
+            List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
 
             // userId를 키로 하고 UserInfo를 값으로 하는 맵 생성
             Map<Long, MessageResponseDTO.SenderInfo> userInfoMap = userInfos.stream()
-                    .collect(Collectors.toMap(ChatResponseDTO.UserInfo::getUserId,
+                    .collect(Collectors.toMap(HaetsalResponseDto.UserInfo::getUserId,
                             userInfo -> new MessageResponseDTO.SenderInfo( // 값 매퍼: UserInfo를 SenderInfo로 변환
                                     userInfo.getUserId(),
                                     userInfo.getProfileImage(),
@@ -126,9 +126,9 @@ public class ChatService {
             return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "유저가 속한 채팅방이 없습니다.");
 
         }else {
-            ChatRequestDTO.PostIdList postIdList = new ChatRequestDTO.PostIdList(myRooms.stream().map(ChatRoom::getPostId).collect(Collectors.toList()));
+            HaetsalRequestDto.PostIdList postIdList = new HaetsalRequestDto.PostIdList(myRooms.stream().map(ChatRoom::getPostId).collect(Collectors.toList()));
             try {
-                List<ChatResponseDTO.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
+                List<HaetsalResponseDto.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
 
                 return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(postInfo, myRooms));
             }catch (FeignException e) {
@@ -137,12 +137,12 @@ public class ChatService {
         }
     }
 
-    private List<ChatPostResponseDto> createChatPostResponseDtoList(List<ChatResponseDTO.PostInfo> requests, List<ChatRoom> rooms) {
+    private List<ChatPostResponseDto> createChatPostResponseDtoList(List<HaetsalResponseDto.PostInfo> requests, List<ChatRoom> rooms) {
 
         List<ChatPostResponseDto> data = new ArrayList<>();
 
         for (int i = 0; i < rooms.size(); i++) {
-            ChatResponseDTO.PostInfo request = requests.get(i);
+            HaetsalResponseDto.PostInfo request = requests.get(i);
             ChatRoom room = rooms.get(i);
 
             boolean isBlockedRoom = false;
@@ -165,8 +165,8 @@ public class ChatService {
         List<String> list = new ArrayList<>();
         list.add(memberId);
 
-        ChatRequestDTO.UserIdList userIdList = new ChatRequestDTO.UserIdList(list);
-        List<ChatResponseDTO.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+        HaetsalRequestDto.UserIdList userIdList = new HaetsalRequestDto.UserIdList(list);
+        List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
         if(userInfos.get(0).isDeleted()){
             isBlockedRoom = true;
         }
