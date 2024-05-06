@@ -20,6 +20,7 @@ public class HaetsalResponseDto {
         private String status;
         private Long dealId;
         private Long pay;
+        private boolean deleted;
         private UserInfo userInfo;
     }
 

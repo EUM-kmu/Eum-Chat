@@ -4,12 +4,15 @@ import com.eum.haetsal.chat.domain.model.ChatRoom;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.swing.border.AbstractBorder;
+
 @Getter
 @Setter
 public class ChatPostResponseDto {
     private Long postId;
     private String status;
     private String title;
+    private boolean isDeletedPost;
     private String roomId;
     private boolean isBlockedRoom; // 일대일 채팅의 경우 상대방이 탈퇴, 일대다 채팅의 경우 creator 가 탈퇴
     private String creatorId;
@@ -22,6 +25,7 @@ public class ChatPostResponseDto {
         this.postId = dto.getPostId();
         this.status = dto.getStatus();
         this.title = dto.getTitle();
+        this.isDeletedPost = dto.isDeleted();
         this.roomId = chatRoom.getId();
         this.isBlockedRoom = isBlockedRoom;
         this.creatorId = chatRoom.getCreatorId();
