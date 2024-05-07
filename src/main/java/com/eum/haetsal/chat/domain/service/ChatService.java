@@ -55,19 +55,9 @@ public class ChatService {
             HaetsalRequestDto.PostIdList postIdList = new HaetsalRequestDto.PostIdList(Collections.singletonList(chatRoom.getPostId()));
             HaetsalResponseDto.PostInfo postInfo = haetsalClient.getChatPost(postIdList).get(0);
 
-            // 채팅 메시지들을 조회
-            List<Message> messages = chatRepository.findMessageByChatRoomId(chatRoomId);
-
-            // userId 목록을 추출
-            List<String> userIds = messages.stream()
-                    .map(Message::getUserId)
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            // haetsalClient 로부터 userInfo 받아오기
-            HaetsalRequestDto.UserIdList userIdList = new HaetsalRequestDto.UserIdList(userIds);
-            List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+            List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(
+                    new HaetsalRequestDto.UserIdList(chatRoom.getMembers())
+            );
 
             // userId를 키로 하고 UserInfo를 값으로 하는 맵 생성
             Map<Long, MessageResponseDTO.SenderInfo> userInfoMap = userInfos.stream()
@@ -80,7 +70,7 @@ public class ChatService {
                             )));
 
             // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
-            List<MessageResponseDTO> messageWithUserInfo = messages.stream()
+            List<MessageResponseDTO> messageWithUserInfo = chatRepository.findMessageByChatRoomId(chatRoomId).stream()
                     .map(message -> {
                         Long userId = Optional.ofNullable(message.getUserId())  // message.getUserId()가 null일 수 있음
                                 .map(Long::parseLong)  // null이 아니면 Long으로 파싱
@@ -183,6 +173,10 @@ public class ChatService {
     public BaseResponseEntity updateMembers(String chatRoomId, RoomRequestDto dto, String userId) {
 
         ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
+
+        if(!chatRoom.getCreatorId().equals(userId)){
+            return new BaseResponseEntity<>(HttpStatus.UNAUTHORIZED, "해당 게시글의 작성자가 아니므로 수정권한이 없습니다.");
+        }
 
         List<String> updatedList = dto.getMemberIds();
         updatedList.add(0,userId);
