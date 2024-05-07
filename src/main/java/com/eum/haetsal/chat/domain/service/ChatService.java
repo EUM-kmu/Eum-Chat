@@ -113,8 +113,7 @@ public class ChatService {
         List<ChatRoom> myRooms = chatRoomRepository.findAllById(userId);
 
         if(myRooms.isEmpty()){
-            return new BaseResponseEntity<>(HttpStatus.BAD_REQUEST, "유저가 속한 채팅방이 없습니다.");
-
+            return new BaseResponseEntity<>(HttpStatus.OK, myRooms);
         }else {
             HaetsalRequestDto.PostIdList postIdList = new HaetsalRequestDto.PostIdList(myRooms.stream().map(ChatRoom::getPostId).collect(Collectors.toList()));
             try {
