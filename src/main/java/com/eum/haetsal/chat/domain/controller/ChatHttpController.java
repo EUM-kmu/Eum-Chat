@@ -5,7 +5,6 @@ import com.eum.haetsal.chat.domain.service.ChatService;
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
 import com.eum.haetsal.chat.domain.service.ValidationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,9 +41,10 @@ public class ChatHttpController {
     @GetMapping("/{chatRoomId}")
     @Operation(summary = "채팅방 내부. 유저가 속한 특정 채팅방의 전체 채팅 내역을 확인합니다.")
     public BaseResponseEntity<?> getMessagesAndUserInfo(
-            @Parameter(description = "채팅 내역을 확인할 room 의 id", example = "1", required = true)
             @PathVariable String chatRoomId,
-            @RequestHeader String userId
+            @RequestHeader String userId,
+            @RequestParam(value = "pagingIndex", defaultValue = "0") int pageNumber,
+            @RequestParam(value = "pagingSize", defaultValue = "30") int pageSize
     ) {
 
         BaseResponseEntity<String> validateResponse = validationService.validateChatRoomAccess(chatRoomId, userId);
@@ -52,7 +52,7 @@ public class ChatHttpController {
             return validateResponse;
         }
 
-        BaseResponseEntity response =  chatService.getMessagesAndUserInfo(chatRoomId);
+        BaseResponseEntity response =  chatService.getMessagesAndUserInfo(chatRoomId, pageNumber, pageSize);
         return response;
     }
 
