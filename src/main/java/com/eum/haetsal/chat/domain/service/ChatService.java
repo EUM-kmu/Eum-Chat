@@ -37,8 +37,8 @@ public class ChatService implements DisposableBean {
     private final HaetsalClient haetsalClient;
 
     private static final ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> messageMap = new ConcurrentHashMap<>();
-    private static final int transactionMessageSize = 2;
-    private static final int messagePageableSize = 3;
+    private static final int transactionMessageSize = 15;
+    private static final int messagePageableSize = 15;
 
     @Override
     public void destroy() {

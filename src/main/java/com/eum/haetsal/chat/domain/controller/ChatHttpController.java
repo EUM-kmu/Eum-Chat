@@ -44,7 +44,7 @@ public class ChatHttpController {
             @PathVariable String chatRoomId,
             @RequestHeader String userId,
             @RequestParam(value = "pagingIndex", defaultValue = "0") int pageNumber,
-            @RequestParam(value = "pagingSize", defaultValue = "30") int pageSize
+            @RequestParam(value = "pagingSize", defaultValue = "20") int pageSize
     ) {
 
         BaseResponseEntity<String> validateResponse = validationService.validateChatRoomAccess(chatRoomId, userId);
