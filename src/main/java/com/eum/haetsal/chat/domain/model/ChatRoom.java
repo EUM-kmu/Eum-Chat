@@ -1,7 +1,6 @@
 package com.eum.haetsal.chat.domain.model;
 
-import com.eum.haetsal.chat.domain.dto.request.RoomRequestDto;
-import lombok.AllArgsConstructor;
+import com.eum.haetsal.chat.domain.controller.dto.request.RoomRequestDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

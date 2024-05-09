@@ -1,8 +1,8 @@
 package com.eum.haetsal.chat.domain.client;
 
 
-import com.eum.haetsal.chat.domain.dto.request.HaetsalRequestDto;
-import com.eum.haetsal.chat.domain.dto.response.HaetsalResponseDto;
+import com.eum.haetsal.chat.domain.controller.dto.request.HaetsalRequestDto;
+import com.eum.haetsal.chat.domain.controller.dto.response.HaetsalResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 

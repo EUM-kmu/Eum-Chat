@@ -1,6 +1,6 @@
 package com.eum.haetsal.chat.domain.controller;
 
-import com.eum.haetsal.chat.domain.dto.response.OneToOneChatRoomsResponseDto;
+import com.eum.haetsal.chat.domain.controller.dto.response.OneToOneChatRoomsResponseDto;
 import com.eum.haetsal.chat.domain.service.HaetsalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

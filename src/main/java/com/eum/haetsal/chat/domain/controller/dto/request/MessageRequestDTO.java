@@ -1,4 +1,4 @@
-package com.eum.haetsal.chat.domain.dto.request;
+package com.eum.haetsal.chat.domain.controller.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
