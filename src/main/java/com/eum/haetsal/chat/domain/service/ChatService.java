@@ -12,6 +12,7 @@ import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ChatService {
+public class ChatService implements DisposableBean {
 
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
@@ -31,11 +32,38 @@ public class ChatService {
 
     private final HaetsalClient haetsalClient;
 
+    // local cache
+    private static final Map<String, Queue<Message>> messageMap = new HashMap<>();
+
+    @Override
+    public void destroy() {
+        System.out.println("서버가 종료되고 있습니다. 모든 메시지 큐를 처리합니다...");
+        for (Queue<Message> messages : messageMap.values()) {
+            commitMessageQueue(messages);
+        }
+    }
+
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
 
         try {
             Message message = Message.from(chatRoomId,userId, Message.MessageType.CHAT, content);
-            chatRepository.save(message);
+
+            if(!messageMap.containsKey(chatRoomId)){
+                Queue<Message> q = new LinkedList<>();
+                q.add(message);
+                messageMap.put(chatRoomId, q);
+            }else{
+                Queue<Message> mQueue = messageMap.get(chatRoomId);
+                mQueue.add(message);
+                if(mQueue.size() > 5){
+                    Queue<Message> q = new LinkedList<>();
+                    for(int i =0; i< 20; i++){
+                        q.add(mQueue.poll());
+                    }
+                    commitMessageQueue(q);
+                }
+                messageMap.put(chatRoomId, mQueue);
+            }
 
             broadcastService.broadcastMessage(message, chatRoomId);
 
@@ -45,6 +73,14 @@ public class ChatService {
             return new BaseResponseEntity<>(e);
         }
 
+    }
+
+    private void commitMessageQueue(Queue<Message> messageQueue) {
+        //쓰기 지연
+        for (int i = 0; i < messageQueue.size(); i++) {
+            Message message = messageQueue.poll();
+            chatRepository.save(message);
+        }
     }
 
     public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId) {
