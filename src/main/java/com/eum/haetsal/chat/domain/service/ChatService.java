@@ -12,18 +12,24 @@ import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ChatService {
+public class ChatService implements DisposableBean {
 
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
@@ -31,29 +37,75 @@ public class ChatService {
 
     private final HaetsalClient haetsalClient;
 
+    private static final ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> messageMap = new ConcurrentHashMap<>();
+    private static final int transactionMessageSize = 15;
+    private static final int messagePageableSize = 15;
+
+    private final MongoTemplate mongoTemplate;
+
+    @Override
+    public void destroy() {
+        System.out.println("서버가 종료되고 있습니다. 모든 메시지 큐를 처리합니다...");
+        messageMap.forEach((roomId, messageQueue) -> commitMessageQueue(messageQueue));
+    }
+
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
 
-        try {
-            Message message = Message.from(chatRoomId,userId, Message.MessageType.CHAT, content);
-            chatRepository.save(message);
+        Message message = Message.from(chatRoomId,userId, Message.MessageType.CHAT, content);
 
+        try {
+            saveInCacheOrDB(chatRoomId, message);
             broadcastService.broadcastMessage(message, chatRoomId);
 
             return new BaseResponseEntity<>(HttpStatus.OK);
-
         } catch (Exception e){
             return new BaseResponseEntity<>(e);
         }
 
     }
 
-    public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId) {
+    private void saveInCacheOrDB(String chatRoomId, Message message) {
+
+        ConcurrentLinkedQueue<Message> messageQueue = messageMap.get(chatRoomId);
+
+        if(messageMap.get(chatRoomId) == null){
+            messageQueue = new ConcurrentLinkedQueue<>();
+        }
+        messageQueue.add(message);
+
+        if(messageQueue.size() > transactionMessageSize + messagePageableSize){
+            ConcurrentLinkedQueue<Message> q = new ConcurrentLinkedQueue<>();
+
+            for(int i =0; i< transactionMessageSize; i++){
+                q.add(messageQueue.poll());
+            }
+            commitMessageQueue(q);
+        }
+
+        messageMap.put(chatRoomId, messageQueue);
+    }
+
+    private void commitMessageQueue(Queue<Message> messageQueue) {
+        int size = messageQueue.size();
+        List<Message> messages = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            messages.add(messageQueue.poll());
+        }
+        bulkInsertMessages(messages);
+    }
+
+    public void bulkInsertMessages(List<Message> messages) {
+        mongoTemplate.insertAll(messages);
+    }
+
+    public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId, int pageNumber, int pageSize) {
         try {
 
             ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
 
-            HaetsalRequestDto.PostIdList postIdList = new HaetsalRequestDto.PostIdList(Collections.singletonList(chatRoom.getPostId()));
-            HaetsalResponseDto.PostInfo postInfo = haetsalClient.getChatPost(postIdList).get(0);
+            HaetsalResponseDto.PostInfo postInfo = haetsalClient.getChatPost(
+                    new HaetsalRequestDto.PostIdList(Collections.singletonList(chatRoom.getPostId()))
+                    ).get(0);
 
             List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(
                     new HaetsalRequestDto.UserIdList(chatRoom.getMembers())
@@ -69,8 +121,28 @@ public class ChatService {
                                     userInfo.isDeleted()
                             )));
 
+            ConcurrentLinkedQueue<Message> messageQueue = messageMap.get(chatRoomId);
+
+            Queue<Message> messages = null;
+
+            if(messageQueue != null && pageNumber == 0){
+                //Cache Hit
+                LinkedList<Message> reversedQueue = new LinkedList<>();
+                for (Message message : messageQueue) {
+                    reversedQueue.addFirst(message);
+                }
+                messages =reversedQueue;
+            }else{
+                if(messageQueue != null){
+                    pageNumber--;
+                }
+                Pageable pageable = PageRequest.of(pageNumber, pageSize);
+                //Cache Miss
+                messages = chatRepository.findAllByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable);
+            }
+
             // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
-            List<MessageResponseDTO> messageWithUserInfo = chatRepository.findMessageByChatRoomId(chatRoomId).stream()
+            List<MessageResponseDTO> messageWithUserInfo = messages.stream()
                     .map(message -> {
                         Long userId = Optional.ofNullable(message.getUserId())  // message.getUserId()가 null일 수 있음
                                 .map(Long::parseLong)  // null이 아니면 Long으로 파싱
