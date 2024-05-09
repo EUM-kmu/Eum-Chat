@@ -2,8 +2,8 @@ package com.eum.haetsal.chat.domain.service;
 
 
 import com.eum.haetsal.chat.domain.client.HaetsalClient;
-import com.eum.haetsal.chat.domain.dto.request.HaetsalRequestDto;
-import com.eum.haetsal.chat.domain.dto.response.HaetsalResponseDto;
+import com.eum.haetsal.chat.domain.controller.dto.request.HaetsalRequestDto;
+import com.eum.haetsal.chat.domain.controller.dto.response.HaetsalResponseDto;
 import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.eum.haetsal.chat.domain.dto.response;
+package com.eum.haetsal.chat.domain.controller.dto.response;
 
 
 import lombok.AllArgsConstructor;
