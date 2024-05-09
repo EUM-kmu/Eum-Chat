@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,8 @@ public class ChatService implements DisposableBean {
     private static final ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> messageMap = new ConcurrentHashMap<>();
     private static final int transactionMessageSize = 15;
     private static final int messagePageableSize = 15;
+
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public void destroy() {
@@ -84,10 +87,15 @@ public class ChatService implements DisposableBean {
 
     private void commitMessageQueue(Queue<Message> messageQueue) {
         int size = messageQueue.size();
+        List<Message> messages = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            Message message = messageQueue.poll();
-            chatRepository.save(message);
+            messages.add(messageQueue.poll());
         }
+        bulkInsertMessages(messages);
+    }
+
+    public void bulkInsertMessages(List<Message> messages) {
+        mongoTemplate.insertAll(messages);
     }
 
     public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId, int pageNumber, int pageSize) {
