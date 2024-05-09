@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/chat-service/api/chats")
+@RequestMapping("/chat-service/api/chatrooms")
 @Tag(name = "채팅방" ,description = "채팅방 api")
 public class ChatRoomController {
 
@@ -69,6 +69,16 @@ public class ChatRoomController {
         }
 
         BaseResponseEntity response = chatRoomService.updateMembers(chatRoomId, dto, userId);
+        return response;
+    }
+
+    @GetMapping("/post/{postId}")
+    @Operation(summary = "postId -> roomId list ")
+    public BaseResponseEntity<?> getRoomIds(
+            @PathVariable int postId
+    ) {
+
+        BaseResponseEntity response = chatRoomService.getRoomIds(postId);
         return response;
     }
 }
