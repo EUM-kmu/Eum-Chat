@@ -10,7 +10,6 @@ import com.eum.haetsal.chat.domain.controller.dto.response.MemberIdsResponseDto;
 import com.eum.haetsal.chat.domain.controller.dto.response.RoomResponseDto;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
 import com.eum.haetsal.chat.domain.model.Message;
-import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +41,7 @@ public class ChatRoomService {
 
         try{
             chatRoomRepository.save(chatRoom);
-            return new BaseResponseEntity<>(HttpStatus.OK, new RoomResponseDto(chatRoom));
+            return new BaseResponseEntity<>(HttpStatus.OK, new RoomResponseDto.Room(chatRoom));
 
         }catch (Exception e){
             return new BaseResponseEntity<>(e);
@@ -138,7 +137,7 @@ public class ChatRoomService {
                 return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/users)를 불러오는 데 실패했습니다.: " + fe.getMessage());
             }
 
-            return new BaseResponseEntity<>(HttpStatus.OK, new RoomResponseDto(chatRoom));
+            return new BaseResponseEntity<>(HttpStatus.OK, new RoomResponseDto.Room(chatRoom));
         }catch (Exception e){
             return new BaseResponseEntity<>(e);
         }
@@ -154,5 +153,12 @@ public class ChatRoomService {
         return existingList.stream()
                 .filter(member -> !updatedList.contains(member))
                 .collect(Collectors.toList());
+    }
+
+    public BaseResponseEntity getRoomIds(int postId) {
+        List<RoomResponseDto.RoomId> chatRoomIds = chatRoomRepository.findAllChatRoomIdByPostId(postId);
+        return new BaseResponseEntity<>(HttpStatus.OK, new RoomResponseDto.RoomIds(chatRoomIds.stream()
+                .map(RoomResponseDto.RoomId::getId)
+                .collect(Collectors.toList())));
     }
 }
