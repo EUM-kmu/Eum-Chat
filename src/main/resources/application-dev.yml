@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: dev-eum-chat
+
+server:
+  port: 8060
