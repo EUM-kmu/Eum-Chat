@@ -6,7 +6,6 @@ import com.eum.haetsal.chat.domain.controller.dto.response.*;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
 import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
-import com.eum.haetsal.chat.domain.controller.dto.request.RoomRequestDto;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
 import feign.FeignException;
@@ -17,9 +16,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -165,4 +167,26 @@ public class ChatService implements DisposableBean {
             return new BaseResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR, "채팅 서버 에러: " + e.getMessage());
         }
     }
+
+    @Scheduled(cron = "0 0 3 * * *")  // 매일 새벽 3시에 실행
+    public void cleanupOldMessages(){
+
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
+
+        Iterator<Map.Entry<String, ConcurrentLinkedQueue<Message>>> iterator = messageMap.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<String, ConcurrentLinkedQueue<Message>> entry = iterator.next();
+            ConcurrentLinkedQueue<Message> queue = entry.getValue();
+
+            System.out.println(entry.getKey());
+
+            Message lastMessage = queue.peek();
+            if (lastMessage != null && lastMessage.getCreatedAt().isBefore(oneWeekAgo)) {
+                commitMessageQueue(queue);
+                iterator.remove();
+            }
+        }
+    }
+
 }
