@@ -8,10 +8,15 @@ import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.github.benmanes.caffeine.cache.RemovalListener;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -39,7 +44,7 @@ public class ChatService implements DisposableBean {
 
     private final HaetsalClient haetsalClient;
 
-    private static final ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> messageMap = new ConcurrentHashMap<>();
+    private final Cache<String, ConcurrentLinkedQueue<Message>> chatCache;
     private static final int transactionMessageSize = 15;
     private static final int messagePageableSize = 15;
 
@@ -48,7 +53,10 @@ public class ChatService implements DisposableBean {
     @Override
     public void destroy() {
         System.out.println("서버가 종료되고 있습니다. 모든 메시지 큐를 처리합니다...");
-        messageMap.forEach((roomId, messageQueue) -> commitMessageQueue(messageQueue));
+
+        for (ConcurrentLinkedQueue<Message> messageQueue : chatCache.asMap().values()) {
+            commitMessageQueue(messageQueue);
+        }
     }
 
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
@@ -66,11 +74,11 @@ public class ChatService implements DisposableBean {
 
     }
 
-    private void saveInCacheOrDB(String chatRoomId, Message message) {
+    public void saveInCacheOrDB(String chatRoomId, Message message) {
 
-        ConcurrentLinkedQueue<Message> messageQueue = messageMap.get(chatRoomId);
+        ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
 
-        if(messageMap.get(chatRoomId) == null){
+        if(messageQueue == null){
             messageQueue = new ConcurrentLinkedQueue<>();
         }
         messageQueue.add(message);
@@ -84,10 +92,10 @@ public class ChatService implements DisposableBean {
             commitMessageQueue(q);
         }
 
-        messageMap.put(chatRoomId, messageQueue);
+        chatCache.put(chatRoomId, messageQueue);
     }
 
-    private void commitMessageQueue(Queue<Message> messageQueue) {
+    public void commitMessageQueue(Queue<Message> messageQueue) {
         int size = messageQueue.size();
         List<Message> messages = new ArrayList<>();
         for (int i = 0; i < size; i++) {
@@ -123,7 +131,7 @@ public class ChatService implements DisposableBean {
                                     userInfo.isDeleted()
                             )));
 
-            ConcurrentLinkedQueue<Message> messageQueue = messageMap.get(chatRoomId);
+            ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
 
             Queue<Message> messages = null;
 
@@ -173,13 +181,11 @@ public class ChatService implements DisposableBean {
 
         LocalDateTime oneWeekAgo = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
 
-        Iterator<Map.Entry<String, ConcurrentLinkedQueue<Message>>> iterator = messageMap.entrySet().iterator();
+        Iterator<Map.Entry<String, ConcurrentLinkedQueue<Message>>> iterator = chatCache.asMap().entrySet().iterator();
 
         while (iterator.hasNext()) {
             Map.Entry<String, ConcurrentLinkedQueue<Message>> entry = iterator.next();
             ConcurrentLinkedQueue<Message> queue = entry.getValue();
-
-            System.out.println(entry.getKey());
 
             Message lastMessage = queue.peek();
             if (lastMessage != null && lastMessage.getCreatedAt().isBefore(oneWeekAgo)) {
