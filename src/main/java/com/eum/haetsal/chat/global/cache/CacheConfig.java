@@ -30,7 +30,6 @@ public class CacheConfig {
 
         RemovalListener<String, ConcurrentLinkedQueue<Message>> listener = (String key, ConcurrentLinkedQueue<Message> queue, RemovalCause cause) -> {
             if (cause.wasEvicted()) {
-                // 여기에 메시지를 데이터베이스 또는 다른 저장소에 저장하는 로직을 구현
                 commitMessageQueue(queue);
             }
         };
