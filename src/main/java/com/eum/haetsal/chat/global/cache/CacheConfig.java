@@ -19,14 +19,41 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @Configuration
 public class CacheConfig {
 
+    private final MongoTemplate mongoTemplate;
+
+    public CacheConfig(MongoTemplate mongoTemplate) {
+        this.mongoTemplate = mongoTemplate;
+    }
+
     @Bean
     public Cache<String, ConcurrentLinkedQueue<Message>> chatCache() {
+
+        RemovalListener<String, ConcurrentLinkedQueue<Message>> listener = (String key, ConcurrentLinkedQueue<Message> queue, RemovalCause cause) -> {
+            if (cause.wasEvicted()) {
+                // 여기에 메시지를 데이터베이스 또는 다른 저장소에 저장하는 로직을 구현
+                commitMessageQueue(queue);
+            }
+        };
 
         return Caffeine.newBuilder()
                 .initialCapacity(200) // 초기 크기 설정
                 .softValues() // Soft references to values, reclaimed in response to memory demand
                 .maximumSize(1000) // 최대 크기 설정
+                .removalListener(listener)
                 .build();
+    }
+
+    public void commitMessageQueue(Queue<Message> messageQueue) {
+        int size = messageQueue.size();
+        List<Message> messages = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            messages.add(messageQueue.poll());
+        }
+        bulkInsertMessages(messages);
+    }
+
+    public void bulkInsertMessages(List<Message> messages) {
+        mongoTemplate.insertAll(messages);
     }
 
 }
