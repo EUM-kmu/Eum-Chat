@@ -6,20 +6,27 @@ import com.eum.haetsal.chat.domain.controller.dto.response.*;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
 import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
-import com.eum.haetsal.chat.domain.controller.dto.request.RoomRequestDto;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.github.benmanes.caffeine.cache.RemovalListener;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -37,7 +44,7 @@ public class ChatService implements DisposableBean {
 
     private final HaetsalClient haetsalClient;
 
-    private static final ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> messageMap = new ConcurrentHashMap<>();
+    private final Cache<String, ConcurrentLinkedQueue<Message>> chatCache;
     private static final int transactionMessageSize = 15;
     private static final int messagePageableSize = 15;
 
@@ -46,7 +53,10 @@ public class ChatService implements DisposableBean {
     @Override
     public void destroy() {
         System.out.println("서버가 종료되고 있습니다. 모든 메시지 큐를 처리합니다...");
-        messageMap.forEach((roomId, messageQueue) -> commitMessageQueue(messageQueue));
+
+        for (ConcurrentLinkedQueue<Message> messageQueue : chatCache.asMap().values()) {
+            commitMessageQueue(messageQueue);
+        }
     }
 
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
@@ -64,11 +74,11 @@ public class ChatService implements DisposableBean {
 
     }
 
-    private void saveInCacheOrDB(String chatRoomId, Message message) {
+    public void saveInCacheOrDB(String chatRoomId, Message message) {
 
-        ConcurrentLinkedQueue<Message> messageQueue = messageMap.get(chatRoomId);
+        ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
 
-        if(messageMap.get(chatRoomId) == null){
+        if(messageQueue == null){
             messageQueue = new ConcurrentLinkedQueue<>();
         }
         messageQueue.add(message);
@@ -82,10 +92,10 @@ public class ChatService implements DisposableBean {
             commitMessageQueue(q);
         }
 
-        messageMap.put(chatRoomId, messageQueue);
+        chatCache.put(chatRoomId, messageQueue);
     }
 
-    private void commitMessageQueue(Queue<Message> messageQueue) {
+    public void commitMessageQueue(Queue<Message> messageQueue) {
         int size = messageQueue.size();
         List<Message> messages = new ArrayList<>();
         for (int i = 0; i < size; i++) {
@@ -121,7 +131,7 @@ public class ChatService implements DisposableBean {
                                     userInfo.isDeleted()
                             )));
 
-            ConcurrentLinkedQueue<Message> messageQueue = messageMap.get(chatRoomId);
+            ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
 
             Queue<Message> messages = null;
 
@@ -165,4 +175,24 @@ public class ChatService implements DisposableBean {
             return new BaseResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR, "채팅 서버 에러: " + e.getMessage());
         }
     }
+
+    @Scheduled(cron = "0 0 3 * * *")  // 매일 새벽 3시에 실행
+    public void cleanupOldMessages(){
+
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
+
+        Iterator<Map.Entry<String, ConcurrentLinkedQueue<Message>>> iterator = chatCache.asMap().entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<String, ConcurrentLinkedQueue<Message>> entry = iterator.next();
+            ConcurrentLinkedQueue<Message> queue = entry.getValue();
+
+            Message lastMessage = queue.peek();
+            if (lastMessage != null && lastMessage.getCreatedAt().isBefore(oneWeekAgo)) {
+                commitMessageQueue(queue);
+                iterator.remove();
+            }
+        }
+    }
+
 }
