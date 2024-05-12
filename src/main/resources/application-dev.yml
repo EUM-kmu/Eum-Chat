@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: dev-eum-chat
+
+  data:
+    mongodb:
+      host: ${DEV_MONGO_HOST}
+
+server:
+  port: 8080
