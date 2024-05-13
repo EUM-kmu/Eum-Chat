@@ -31,6 +31,7 @@ springdoc:
     path: /chat-service/docs
   swagger-ui:
     path: /chat-service/docs/swagger-ui.html
+
 openapi:
   service:
     # API Gateway 포트
