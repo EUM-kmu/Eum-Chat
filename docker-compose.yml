@@ -5,10 +5,6 @@ services:
     container_name: mongodb
     hostname: mongodb
     restart: always
-    environment:
-        - MONGO_INITDB_DATABASE=chatDB
-        - MONGO_INITDB_ROOT_USERNAME=root
-        - MONGO_INITDB_ROOT_PASSWORD=root
     ports:
       - 27017:27017
     volumes:
@@ -23,8 +19,8 @@ services:
     hostname: springboot
     ports:
       - 8080:8080
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://root:root@mongodb:27017/chatDB?authSource=admin
+    env_file:
+      - .env
     links:
       - mongodb
     depends_on:

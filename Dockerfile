@@ -3,7 +3,7 @@ FROM --platform=linux/amd64 openjdk:17-jdk
 
 LABEL maintainer="ytjdud01@kookmin.ac.kr"
 
-VOLUME /eum-chat
+VOLUME /timepay-chat
 
 EXPOSE 8080
 
