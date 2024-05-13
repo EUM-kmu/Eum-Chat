@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-//@FeignClient(name = "haetsal-service", url = "http://223.130.146.39:8000") 운영서버
-@FeignClient(name = "haetsal-service", url = "http://175.45.203.201:8000")
+@FeignClient(name = "haetsal-service", url = "http://223.130.146.39:8000")
+//@FeignClient(name = "haetsal-service", url = "http://175.45.203.201:8000")
 public interface HaetsalClient {
 
     @PostMapping ("/haetsal-service/api/v2/chat/posts")
