@@ -1,3 +1,6 @@
 spring:
   application:
     name: local-eum-chat
+
+haetsal-url: ${DEV_HAETSAL_URL}
+
