@@ -7,7 +7,7 @@ spring:
       password: ${PASSWORD}
       database: chatDB
   profiles:
-    active: dev
+    active: local
 
 logging:
   level:
@@ -22,10 +22,10 @@ eureka:
       defaultZone: http://223.130.146.39:8761/eureka
   instance:
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-
   logging:
     level:
       com.eum.haetsal: debug
+
 springdoc:
   api-docs:
     path: /chat-service/docs
