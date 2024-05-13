@@ -9,14 +9,10 @@ import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.RemovalCause;
-import com.github.benmanes.caffeine.cache.RemovalListener;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -28,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
@@ -118,7 +113,7 @@ public class ChatService implements DisposableBean {
                     ).get(0);
 
             List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(
-                    new HaetsalRequestDto.UserIdList(chatRoom.getMembers())
+                    new HaetsalRequestDto.UserIdList(chatRoom.getMembersHistory())
             );
 
             // userId를 키로 하고 UserInfo를 값으로 하는 맵 생성
@@ -193,6 +188,21 @@ public class ChatService implements DisposableBean {
                 iterator.remove();
             }
         }
+    }
+
+    void broadcastStatusMessages(List<String> removed, Message.MessageType type, String x, String chatRoomId) {
+
+        HaetsalRequestDto.UserIdList userIdList = new HaetsalRequestDto.UserIdList(removed);
+        List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(userIdList);
+
+        userInfos.forEach(userInfo -> {
+
+            Message message = Message.from(chatRoomId, null, type, userInfo.getNickName() + x);
+
+            saveInCacheOrDB(chatRoomId, message);
+
+            broadcastService.broadcastMessage(message, chatRoomId);
+        });
     }
 
 }
