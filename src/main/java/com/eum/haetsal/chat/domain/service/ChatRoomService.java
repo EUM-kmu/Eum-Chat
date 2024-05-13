@@ -29,15 +29,16 @@ import java.util.stream.Collectors;
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
-    private final BroadcastService broadcastService;
 
     private final HaetsalClient haetsalClient;
+    private final ChatService chatService;
 
 
     public BaseResponseEntity<?> createChatRoom(RoomRequestDto dto, String userId) {
 
         ChatRoom chatRoom = new ChatRoom(dto, userId);
         chatRoom.getMembers().add(0,userId);
+        chatRoom.setMembersHistory(chatRoom.getMembers());
 
         try{
             chatRoomRepository.save(chatRoom);
@@ -125,13 +126,14 @@ public class ChatRoomService {
         List<String> removed = findRemovedMembers(updatedList, existingList);
 
         chatRoom.setMembers(updatedList);
+        chatRoom.getMembersHistory().addAll(Added);
 
         try{
             chatRoomRepository.save(chatRoom);
 
             try {
-                broadcastService.broadcastStatusMessages(removed, Message.MessageType.LEAVE, " 님이 퇴장했습니다.", chatRoomId);
-                broadcastService.broadcastStatusMessages(Added, Message.MessageType.JOIN, " 님이 입장했습니다.", chatRoomId);
+                chatService.broadcastStatusMessages(removed, Message.MessageType.LEAVE, " 님이 퇴장했습니다.", chatRoomId);
+                chatService.broadcastStatusMessages(Added, Message.MessageType.JOIN, " 님이 입장했습니다.", chatRoomId);
 
             } catch (FeignException.FeignClientException fe){
                 return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/users)를 불러오는 데 실패했습니다.: " + fe.getMessage());

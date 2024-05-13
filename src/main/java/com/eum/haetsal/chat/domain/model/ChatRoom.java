@@ -27,6 +27,8 @@ public class ChatRoom {
 
     private List<String> members;
 
+    private List<String> membersHistory;
+
     public ChatRoom(RoomRequestDto dto, String userId) {
         this.postId = dto.getPostId();
         this.creatorId = userId;
