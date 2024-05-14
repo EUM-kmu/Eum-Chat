@@ -6,17 +6,6 @@ spring:
     mongodb:
       host: ${DEV_MONGO_HOST}
 
-springdoc:
-  api-docs:
-    path: /chat-service/docs
-  swagger-ui:
-    path: /chat-service/docs/swagger-ui.html
-
-openapi:
-  service:
-    # API Gateway 포트
-    url: http://localhost:80
-
 server:
   port: 8080
 
