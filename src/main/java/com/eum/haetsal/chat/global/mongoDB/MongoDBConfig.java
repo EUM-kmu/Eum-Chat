@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
@@ -25,6 +26,12 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @EnableMongoRepositories("com.eum.haetsal.chat.domain.repository")
 @EnableMongoAuditing
 public class MongoDBConfig extends AbstractMongoClientConfiguration {
+    private final Environment environment;
+
+    public MongoDBConfig(Environment environment) {
+        this.environment = environment;
+    }
+
     @Bean
     public MappingMongoConverter mappingMongoConverter(
             MongoDatabaseFactory mongoDatabaseFactory,
@@ -38,7 +45,7 @@ public class MongoDBConfig extends AbstractMongoClientConfiguration {
 
     @Override
     protected String getDatabaseName() {
-        return "chatDB"; // 데이터베이스 이름 설정
+        return environment.getProperty("prod-db"); // 데이터베이스 이름 설정
     }
 
     @Bean
