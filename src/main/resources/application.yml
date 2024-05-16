@@ -5,9 +5,8 @@ spring:
       authentication-database: ${AUTH_DB}
       username: ${USERNAME}
       password: ${PASSWORD}
-      database: chatDB
   profiles:
-    active: local
+    active: dev
 
 logging:
   level:
