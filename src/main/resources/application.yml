@@ -5,9 +5,8 @@ spring:
       authentication-database: ${AUTH_DB}
       username: ${USERNAME}
       password: ${PASSWORD}
-      database: ${PROD_DB}
   profiles:
-    active: prod
+    active: dev
 
 logging:
   level:

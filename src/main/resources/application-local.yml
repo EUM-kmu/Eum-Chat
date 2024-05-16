@@ -2,5 +2,11 @@ spring:
   application:
     name: local-eum-chat
 
+  data:
+    mongodb:
+      database: ${DEV_DB}
+
 haetsal-url: ${DEV_HAETSAL_URL}
+
+db-name: ${DEV_DB}
 
