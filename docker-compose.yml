@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  mongodb:
+    image: mongo:6.0.10
+    container_name: mongodb
+    hostname: mongodb
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/db:/data/db
+
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: springboot
+    hostname: springboot
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    links:
+      - mongodb
+    depends_on:
+      - mongodb
