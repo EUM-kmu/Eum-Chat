@@ -45,7 +45,7 @@ public class MongoDBConfig extends AbstractMongoClientConfiguration {
 
     @Override
     protected String getDatabaseName() {
-        return environment.getProperty("prod-db"); // 데이터베이스 이름 설정
+        return environment.getProperty("db-name"); // 데이터베이스 이름 설정
     }
 
     @Bean
