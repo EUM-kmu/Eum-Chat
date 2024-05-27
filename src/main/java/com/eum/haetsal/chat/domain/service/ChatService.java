@@ -116,6 +116,9 @@ public class ChatService implements DisposableBean {
             List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(
                     new HaetsalRequestDto.UserIdList(chatRoom.getMembersHistory())
             );
+            userInfos.forEach(userInfo -> {
+                userInfo.setCreator(userInfo.getUserId().equals(creatorId));
+            });
 
             // userId를 키로 하고 UserInfo를 값으로 하는 맵 생성
             Map<Long, MessageResponseDTO.SenderInfo> userInfoMap = userInfos.stream()

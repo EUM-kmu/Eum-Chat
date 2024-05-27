@@ -35,6 +35,9 @@ public class HaetsalResponseDto {
         private String address;
         private String accountNumber;
         private boolean deleted;
+
+        // 추가
+        private boolean isCreator;
     }
 
 }
