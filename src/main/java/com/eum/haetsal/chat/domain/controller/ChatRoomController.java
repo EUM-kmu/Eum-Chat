@@ -37,7 +37,9 @@ public class ChatRoomController {
     @GetMapping("")
     @Operation(summary = "특정 유저가 속한 채팅방 목록을 불러옵니다.")
     public BaseResponseEntity<?> getMyChatRooms(
-            @Schema(description = "게시글 상태", example = "RECRUITMENT_COMPLETED / TRANSACTION_COMPLETED ")
+            @Schema(description = "게시글 상태." +
+                    "\n타입: RECRUITMENT_COMPLETED / TRANSACTION_COMPLETED" +
+                    "\n타입 지정안할 시 default=RECRUITMENT_COMPLETED", example = "")
             @RequestParam(value = "status", defaultValue="RECRUITMENT_COMPLETED") MarketPostStatus status,
             @RequestHeader String userId) {
         BaseResponseEntity response = chatRoomService.getChatRooms(userId, status);
