@@ -2,14 +2,17 @@ package com.eum.haetsal.chat.domain.controller;
 
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
 import com.eum.haetsal.chat.domain.controller.dto.request.RoomRequestDto;
+import com.eum.haetsal.chat.domain.model.MarketPostStatus;
 import com.eum.haetsal.chat.domain.service.ChatRoomService;
-import com.eum.haetsal.chat.domain.service.ChatService;
 import com.eum.haetsal.chat.domain.service.ValidationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import static com.eum.haetsal.chat.domain.model.MarketPostStatus.RECRUITMENT_COMPLETED;
 
 @Slf4j
 @RestController
@@ -33,8 +36,11 @@ public class ChatRoomController {
 
     @GetMapping("")
     @Operation(summary = "특정 유저가 속한 채팅방 목록을 불러옵니다.")
-    public BaseResponseEntity<?> getMyChatRooms(@RequestHeader String userId) {
-        BaseResponseEntity response = chatRoomService.getChatRooms(userId);
+    public BaseResponseEntity<?> getMyChatRooms(
+            @Schema(description = "게시글 상태", example = "RECRUITMENT_COMPLETED / TRANSACTION_COMPLETED ")
+            @RequestParam(value = "status", defaultValue="RECRUITMENT_COMPLETED") MarketPostStatus status,
+            @RequestHeader String userId) {
+        BaseResponseEntity response = chatRoomService.getChatRooms(userId, status);
         return response;
     }
 
