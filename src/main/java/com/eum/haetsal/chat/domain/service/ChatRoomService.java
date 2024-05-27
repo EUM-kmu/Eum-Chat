@@ -63,19 +63,15 @@ public class ChatRoomService {
             try {
                 List<HaetsalResponseDto.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
 
-                List<HaetsalResponseDto.PostInfo> filteredPostInfo = filterPosts(postInfo, status);
+                postInfo.stream()
+                        .filter(p -> p.getStatus().equals(status.name()))
+                        .collect(Collectors.toList());
 
-                return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(filteredPostInfo, myRooms));
+                return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(postInfo, myRooms));
             }catch (FeignException e) {
                 return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/posts)를 불러오는 데 실패했습니다:  " + e.getMessage());
             }
         }
-    }
-
-    private List<HaetsalResponseDto.PostInfo> filterPosts(List<HaetsalResponseDto.PostInfo> postInfos, MarketPostStatus status) {
-        return postInfos.stream()
-                .filter(postInfo -> postInfo.getStatus().equals(status.name()))
-                .collect(Collectors.toList());
     }
 
     private List<ChatPostResponseDto> createChatPostResponseDtoList(List<HaetsalResponseDto.PostInfo> requests, List<ChatRoom> rooms) {
