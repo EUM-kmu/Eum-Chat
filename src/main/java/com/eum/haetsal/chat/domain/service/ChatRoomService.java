@@ -74,7 +74,7 @@ public class ChatRoomService {
 
     private List<HaetsalResponseDto.PostInfo> filterPosts(List<HaetsalResponseDto.PostInfo> postInfos, MarketPostStatus status) {
         return postInfos.stream()
-                .filter(postInfo -> postInfo.getStatus() == status.name())
+                .filter(postInfo -> postInfo.getStatus().equals(status.name()))
                 .collect(Collectors.toList());
     }
 
