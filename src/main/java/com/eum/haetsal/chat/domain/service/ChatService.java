@@ -107,6 +107,7 @@ public class ChatService implements DisposableBean {
         try {
 
             ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
+            Long creatorId = Long.parseLong(chatRoom.getCreatorId());
 
             HaetsalResponseDto.PostInfo postInfo = haetsalClient.getChatPost(
                     new HaetsalRequestDto.PostIdList(Collections.singletonList(chatRoom.getPostId()))
@@ -123,6 +124,7 @@ public class ChatService implements DisposableBean {
                                     userInfo.getUserId(),
                                     userInfo.getProfileImage(),
                                     userInfo.getNickName(),
+                                    userInfo.getUserId().equals(creatorId),
                                     userInfo.isDeleted()
                             )));
 
