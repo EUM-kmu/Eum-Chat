@@ -9,6 +9,7 @@ import com.eum.haetsal.chat.domain.controller.dto.response.HaetsalResponseDto;
 import com.eum.haetsal.chat.domain.controller.dto.response.MemberIdsResponseDto;
 import com.eum.haetsal.chat.domain.controller.dto.response.RoomResponseDto;
 import com.eum.haetsal.chat.domain.model.ChatRoom;
+import com.eum.haetsal.chat.domain.model.MarketPostStatus;
 import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
 import feign.FeignException;
@@ -21,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.eum.haetsal.chat.domain.model.MarketPostStatus.RECRUITMENT_COMPLETED;
 
 @Slf4j
 @Service
@@ -49,7 +52,7 @@ public class ChatRoomService {
         }
     }
 
-    public BaseResponseEntity<?> getChatRooms(String userId) {
+    public BaseResponseEntity<?> getChatRooms(String userId, MarketPostStatus status) {
 
         List<ChatRoom> myRooms = chatRoomRepository.findAllById(userId);
 
@@ -60,11 +63,19 @@ public class ChatRoomService {
             try {
                 List<HaetsalResponseDto.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
 
-                return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(postInfo, myRooms));
+                List<HaetsalResponseDto.PostInfo> filteredPostInfo = filterPosts(postInfo, status);
+
+                return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(filteredPostInfo, myRooms));
             }catch (FeignException e) {
                 return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/posts)를 불러오는 데 실패했습니다:  " + e.getMessage());
             }
         }
+    }
+
+    private List<HaetsalResponseDto.PostInfo> filterPosts(List<HaetsalResponseDto.PostInfo> postInfos, MarketPostStatus status) {
+        return postInfos.stream()
+                .filter(postInfo -> postInfo.getStatus() == status.name())
+                .collect(Collectors.toList());
     }
 
     private List<ChatPostResponseDto> createChatPostResponseDtoList(List<HaetsalResponseDto.PostInfo> requests, List<ChatRoom> rooms) {
