@@ -61,26 +61,22 @@ public class ChatRoomService {
         }else {
             HaetsalRequestDto.PostIdList postIdList = new HaetsalRequestDto.PostIdList(myRooms.stream().map(ChatRoom::getPostId).collect(Collectors.toList()));
             try {
-                List<HaetsalResponseDto.PostInfo> postInfo = haetsalClient.getChatPost(postIdList);
+                List<HaetsalResponseDto.PostInfo> filteredPostInfo = haetsalClient.getChatPost(postIdList).stream().filter(p -> p.getStatus().equals(status.name())).collect(Collectors.toList());
 
-                postInfo.stream()
-                        .filter(p -> p.getStatus().equals(status.name()))
-                        .collect(Collectors.toList());
-
-                return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(postInfo, myRooms));
+                return new BaseResponseEntity<>(HttpStatus.OK, createChatPostResponseDtoList(filteredPostInfo, myRooms));
             }catch (FeignException e) {
                 return new BaseResponseEntity<>(HttpStatus.BAD_GATEWAY, "채팅 외부 서비스(햇살 서버의 /chat/posts)를 불러오는 데 실패했습니다:  " + e.getMessage());
             }
         }
     }
 
-    private List<ChatPostResponseDto> createChatPostResponseDtoList(List<HaetsalResponseDto.PostInfo> requests, List<ChatRoom> rooms) {
+    private List<ChatPostResponseDto> createChatPostResponseDtoList(List<HaetsalResponseDto.PostInfo> postInfos, List<ChatRoom> rooms) {
 
         List<ChatPostResponseDto> data = new ArrayList<>();
 
-        for (int i = 0; i < rooms.size(); i++) {
-            HaetsalResponseDto.PostInfo request = requests.get(i);
-            ChatRoom room = rooms.get(i);
+        for (int i = 0; i < postInfos.size(); i++) {
+            HaetsalResponseDto.PostInfo postInfo = postInfos.get(i);
+            ChatRoom room = rooms.stream().filter( r-> r.getPostId() == postInfo.getPostId()).findAny().get();
 
             boolean isBlockedRoom = false;
             // 일대일 채팅의 경우
@@ -91,7 +87,7 @@ public class ChatRoomService {
                 isBlockedRoom = isBlockedRoom(room.getCreatorId(), isBlockedRoom);
 
             }
-            ChatPostResponseDto responseDto = new ChatPostResponseDto(request, room, isBlockedRoom);
+            ChatPostResponseDto responseDto = new ChatPostResponseDto(postInfo, room, isBlockedRoom);
             data.add(responseDto);
         }
 
