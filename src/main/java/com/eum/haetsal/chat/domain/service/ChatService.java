@@ -107,6 +107,7 @@ public class ChatService implements DisposableBean {
         try {
 
             ChatRoom chatRoom = chatRoomRepository.findChatRoomById(chatRoomId);
+            Long creatorId = Long.parseLong(chatRoom.getCreatorId());
 
             HaetsalResponseDto.PostInfo postInfo = haetsalClient.getChatPost(
                     new HaetsalRequestDto.PostIdList(Collections.singletonList(chatRoom.getPostId()))
@@ -115,6 +116,9 @@ public class ChatService implements DisposableBean {
             List<HaetsalResponseDto.UserInfo> userInfos = haetsalClient.getChatUser(
                     new HaetsalRequestDto.UserIdList(chatRoom.getMembersHistory())
             );
+            userInfos.forEach(userInfo -> {
+                userInfo.setCreator(userInfo.getUserId().equals(creatorId));
+            });
 
             // userId를 키로 하고 UserInfo를 값으로 하는 맵 생성
             Map<Long, MessageResponseDTO.SenderInfo> userInfoMap = userInfos.stream()
@@ -123,6 +127,7 @@ public class ChatService implements DisposableBean {
                                     userInfo.getUserId(),
                                     userInfo.getProfileImage(),
                                     userInfo.getNickName(),
+                                    userInfo.getUserId().equals(creatorId),
                                     userInfo.isDeleted()
                             )));
 
