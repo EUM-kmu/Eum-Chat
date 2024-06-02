@@ -2,9 +2,7 @@ name: deploy
 
 on:
   push:
-    branches: [ "develop" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [ "develop", "main" ]
 
 jobs:
   build:
@@ -21,20 +19,13 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          if [ ${{ github.event_name }} == 'push' ]; then
-          export SPRING_PROFILES_ACTIVE=dev
-          elif [ ${{ github.event_name }} == 'pull_request' ]; then
-          export SPRING_PROFILES_ACTIVE=prod
-          else
-          export SPRING_PROFILES_ACTIVE=local
-          fi
           ./gradlew bootJar
 
       - name: Docker build & push to docker hub
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME_YSY }} -p ${{ secrets.DOCKER_PASSWORD_YSY }}
           
-          if [ ${{ github.event_name }} == 'pull_request' ]; then
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
           docker build -t ${{ secrets.DOCKER_REPO_CHAT }} .
           docker push ${{ secrets.DOCKER_REPO_CHAT }}
           else
@@ -43,7 +34,7 @@ jobs:
           fi
 
   deploy_to_dev:
-    if: github.event_name == 'push'
+    if: github.ref == 'refs/heads/develop'
     needs: build
     runs-on: ubuntu-latest
 
@@ -62,7 +53,7 @@ jobs:
             docker image prune -f
 
   deploy_to_prod:
-    if: github.event_name == 'pull_request'
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
 
