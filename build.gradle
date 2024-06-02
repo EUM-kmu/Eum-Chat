@@ -25,6 +25,10 @@ repositories {
 	mavenCentral()
 }
 
+bootRun {
+	environment 'SPRING_PROFILES_ACTIVE', System.getenv('SPRING_PROFILES_ACTIVE')
+}
+
 
 ext {
 	set('springCloudVersion', "2023.0.0")
