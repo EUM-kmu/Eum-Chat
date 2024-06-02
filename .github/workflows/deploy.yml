@@ -22,6 +22,8 @@ jobs:
       - name: Build with Gradle
         run: |
           ./gradlew bootJar
+        env:
+          SPRING_PROFILES_ACTIVE: ${{ (github.ref == 'refs/heads/main') && 'prod' || 'dev' }}
 
       - name: Docker build & push to docker hub
         run: |
