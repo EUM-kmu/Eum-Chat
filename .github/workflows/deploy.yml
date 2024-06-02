@@ -3,6 +3,8 @@ name: deploy
 on:
   push:
     branches: [ "develop" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -24,9 +26,21 @@ jobs:
       - name: Docker build & push to docker hub
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME_YSY }} -p ${{ secrets.DOCKER_PASSWORD_YSY }}
-          docker build -t ${{ secrets.DOCKER_REPO_DEV_CHAT }} .
-          docker push ${{ secrets.DOCKER_REPO_DEV_CHAT }}
+          
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          docker build -t ${{ secrets.DOCKER_REPO_CHAT }} .
+          docker push ${{ secrets.DOCKER_REPO_CHAT }}
+          else
+            docker build -t ${{ secrets.DOCKER_REPO_DEV_CHAT }} .
+            docker push ${{ secrets.DOCKER_REPO_DEV_CHAT }}
+          fi
 
+  deploy_to_dev:
+    if: github.ref == 'refs/heads/develop'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
@@ -37,5 +51,24 @@ jobs:
             docker pull ${{ secrets.DOCKER_REPO_DEV_CHAT }}
             cd dev-eum-chat
             echo "${{ secrets.DEV_CHAT_ENV }}" > .env
+            docker-compose up --build -d
+            docker image prune -f
+
+  deploy_to_prod:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_CHAT_HOST }}
+          username: ${{ secrets.SSH_CHAT_USERNAME }}
+          password: ${{ secrets.SSH_CHAT_PWD }}
+          script: |
+            docker pull ${{ secrets.DOCKER_REPO_CHAT }}
+            cd timepay-chat
+            echo "${{ secrets.CHAT_ENV }}" > .env
             docker-compose up --build -d
             docker image prune -f
