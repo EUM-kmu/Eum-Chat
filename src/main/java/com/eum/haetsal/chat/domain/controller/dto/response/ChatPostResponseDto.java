@@ -15,6 +15,7 @@ public class ChatPostResponseDto {
     private boolean isBlockedRoom; // 일대일 채팅의 경우 상대방이 탈퇴, 일대다 채팅의 경우 creator 가 탈퇴
     private String creatorId;
     private String creatorNickname;
+    private String creatorProfileImg;
     private String startDate;
     private String location;
     private int memberCount;
@@ -28,6 +29,7 @@ public class ChatPostResponseDto {
         this.isBlockedRoom = isBlockedRoom;
         this.creatorId = chatRoom.getCreatorId();
         this.creatorNickname = dto.getUserInfo().getNickName();
+        this.creatorProfileImg = dto.getUserInfo().getProfileImage();
         this.startDate = dto.getStartDate();
         this.location = dto.getLocation();
         this.memberCount = chatRoom.getMembers().size();
