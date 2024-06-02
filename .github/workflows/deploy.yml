@@ -21,12 +21,12 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          if [ ${{ github.event_name }} == 'push' ]; then
-          export SPRING_PROFILES_ACTIVE=dev
-          elif [ ${{ github.event_name }} == 'pull_request' ]; then
-          export SPRING_PROFILES_ACTIVE=prod
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            export SPRING_PROFILES_ACTIVE=dev
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            export SPRING_PROFILES_ACTIVE=prod
           else
-          export SPRING_PROFILES_ACTIVE=local
+            export SPRING_PROFILES_ACTIVE=local
           fi
           ./gradlew bootJar
 
@@ -34,7 +34,7 @@ jobs:
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME_YSY }} -p ${{ secrets.DOCKER_PASSWORD_YSY }}
           
-          if [ ${{ github.event_name }} == 'pull_request' ]; then
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
           docker build -t ${{ secrets.DOCKER_REPO_CHAT }} .
           docker push ${{ secrets.DOCKER_REPO_CHAT }}
           else
