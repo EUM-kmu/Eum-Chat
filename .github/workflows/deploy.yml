@@ -21,14 +21,9 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            export SPRING_PROFILES_ACTIVE=dev
-          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            export SPRING_PROFILES_ACTIVE=prod
-          else
-            export SPRING_PROFILES_ACTIVE=local
-          fi
           ./gradlew bootJar
+        env:
+          SPRING_PROFILES_ACTIVE: ${{ (github.event_name == 'push') && 'dev' || 'prod' }}
 
       - name: Docker build & push to docker hub
         run: |
