@@ -21,10 +21,12 @@ jobs:
         run: |
           ./gradlew bootJar
 
-      - name: Docker build & push to docker hub
+      - name: Docker Hub login
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME_YSY }} -p ${{ secrets.DOCKER_PASSWORD_YSY }}
-          
+
+      - name: Docker build & push to docker hub
+        run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
           docker build -t ${{ secrets.DOCKER_REPO_CHAT }} .
           docker push ${{ secrets.DOCKER_REPO_CHAT }}
