@@ -8,7 +8,7 @@ spring:
       database: ${DEV_DB}
 
 server:
-  port: 8080
+  port: ${DEV_PORT}
 
 haetsal-url: ${DEV_HAETSAL_URL}
 
