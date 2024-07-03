@@ -37,9 +37,12 @@ public class ChatRoomController {
     @GetMapping("")
     @Operation(summary = "특정 유저가 속한 채팅방 목록을 불러옵니다.")
     public BaseResponseEntity<?> getMyChatRooms(
-            @Schema(description = "게시글 상태." +
-                    "\n타입: RECRUITMENT_COMPLETED / TRANSACTION_COMPLETED" +
-                    "\n타입 지정안할 시 default=RECRUITMENT_COMPLETED", example = "")
+            @Schema(description = """
+                    **채팅방과 연결된 게시글의 상태.**\n\n
+                    종류: \n\n
+                    * RECRUITMENT_COMPLETED (모집완료) --> '진행중' 탭과 연결됩니다. \n\n
+                    * TRANSACTION_COMPLETED (송금완료) --> '진행완료' 탭과 연결됩니다. \n\n
+                    타입을 따로 지정하지 않으면 디폴트 값으로 RECRUITMENT_COMPLETED 가 들어갑니다.""", example = "")
             @RequestParam(value = "status", defaultValue="RECRUITMENT_COMPLETED") MarketPostStatus status,
             @RequestHeader String userId) {
         BaseResponseEntity response = chatRoomService.getChatRooms(userId, status);
