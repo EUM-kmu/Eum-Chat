@@ -4,12 +4,10 @@ spring:
 
   data:
     mongodb:
-      host: ${DEV_MONGO_HOST}
+      host: ${PROD_MONGO_HOST}
       database: ${PROD_DB}
 
 server:
-  port: 8080
+  port: ${PROD_PORT}
 
 haetsal-url: ${PROD_HAETSAL_URL}
-
-db-name: ${PROD_DB}

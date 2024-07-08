@@ -1,7 +1,7 @@
 spring:
   data:
     mongodb:
-      port: 27017
+      port: ${MONGO_PORT}
       authentication-database: ${AUTH_DB}
       username: ${USERNAME}
       password: ${PASSWORD}
@@ -18,7 +18,7 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://223.130.146.39:8761/eureka
+      defaultZone: ${EUREKA_DEFAULTZONE}
   instance:
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
   logging:

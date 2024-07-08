@@ -1,0 +1,50 @@
+name: deploy-push
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: "temurin"
+
+      - name: Build with Gradle
+        run: |
+          ./gradlew bootJar
+
+      - name: Docker Hub login
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME_YSY }} -p ${{ secrets.DOCKER_PASSWORD_YSY }}
+
+      - name: Docker build & push to docker hub
+        run: |
+            docker build -t ${{ secrets.DOCKER_REPO_DEV_CHAT }} .
+            docker push ${{ secrets.DOCKER_REPO_DEV_CHAT }}
+
+  deploy_to_dev:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_DEV_CHAT_HOST }}
+          username: ${{ secrets.SSH_DEV_CHAT_USERNAME }}
+          password: ${{ secrets.SSH_DEV_CHAT_PWD }}
+          script: |
+            docker pull ${{ secrets.DOCKER_REPO_DEV_CHAT }}
+            cd dev-eum-chat
+            echo "${{ secrets.DEV_CHAT_ENV }}" > .env
+            docker-compose up --build -d
+            docker image prune -f
