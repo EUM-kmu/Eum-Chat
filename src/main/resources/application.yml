@@ -6,7 +6,7 @@ spring:
       username: ${USERNAME}
       password: ${PASSWORD}
   profiles:
-    active: local
+    active: dev
 
 logging:
   level:

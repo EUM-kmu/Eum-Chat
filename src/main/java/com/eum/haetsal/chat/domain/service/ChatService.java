@@ -8,30 +8,22 @@ import com.eum.haetsal.chat.domain.model.Message;
 import com.eum.haetsal.chat.domain.base.BaseResponseEntity;
 import com.eum.haetsal.chat.domain.repository.ChatRepository;
 import com.eum.haetsal.chat.domain.repository.ChatRoomRepository;
-import com.github.benmanes.caffeine.cache.Cache;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
-// public class ChatService implements DisposableBean
 public class ChatService {
 
     private final ChatRepository chatRepository;
@@ -40,27 +32,12 @@ public class ChatService {
 
     private final HaetsalClient haetsalClient;
 
-/*    private final Cache<String, ConcurrentLinkedQueue<Message>> chatCache;
-    private static final int transactionMessageSize = 15;
-    private static final int messagePageableSize = 15;
-
-    private final MongoTemplate mongoTemplate;*/
-
-/*    @Override
-    public void destroy() {
-        System.out.println("서버가 종료되고 있습니다. 모든 메시지 큐를 처리합니다...");
-
-        for (ConcurrentLinkedQueue<Message> messageQueue : chatCache.asMap().values()) {
-            commitMessageQueue(messageQueue);
-        }
-    }*/
 
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
 
         Message message = Message.from(chatRoomId,userId, Message.MessageType.CHAT, content);
 
         try {
-//            saveInCacheOrDB(chatRoomId, message);
             chatRepository.save(message);
             broadcastService.broadcastMessage(message, chatRoomId);
 
@@ -70,40 +47,6 @@ public class ChatService {
         }
 
     }
-
-/*    public void saveInCacheOrDB(String chatRoomId, Message message) {
-
-        ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
-
-        if(messageQueue == null){
-            messageQueue = new ConcurrentLinkedQueue<>();
-        }
-        messageQueue.add(message);
-
-        if(messageQueue.size() > transactionMessageSize + messagePageableSize){
-            ConcurrentLinkedQueue<Message> q = new ConcurrentLinkedQueue<>();
-
-            for(int i =0; i< transactionMessageSize; i++){
-                q.add(messageQueue.poll());
-            }
-            commitMessageQueue(q);
-        }
-
-        chatCache.put(chatRoomId, messageQueue);
-    }
-
-    public void commitMessageQueue(Queue<Message> messageQueue) {
-        int size = messageQueue.size();
-        List<Message> messages = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            messages.add(messageQueue.poll());
-        }
-        bulkInsertMessages(messages);
-    }
-
-    public void bulkInsertMessages(List<Message> messages) {
-        mongoTemplate.insertAll(messages);
-    }*/
 
     public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId, int pageNumber, int pageSize) {
         try {
@@ -133,25 +76,9 @@ public class ChatService {
                                     userInfo.isDeleted()
                             )));
 
-//            ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
-
             Queue<Message> messages = null;
-
-//            if(messageQueue != null && pageNumber == 0){
-//                //Cache Hit
-//                LinkedList<Message> reversedQueue = new LinkedList<>();
-//                for (Message message : messageQueue) {
-//                    reversedQueue.addFirst(message);
-//                }
-//                messages =reversedQueue;
-//            }else{
-//                if(messageQueue != null){
-//                    pageNumber--;
-//                }
                 Pageable pageable = PageRequest.of(pageNumber, pageSize);
-                //Cache Miss
                 messages = chatRepository.findAllByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable);
-//            }
 
             // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
             List<MessageResponseDTO> messageWithUserInfo = messages.stream()
@@ -178,25 +105,6 @@ public class ChatService {
         }
     }
 
-//    @Scheduled(cron = "0 0 3 * * *")  // 매일 새벽 3시에 실행
-//    public void cleanupOldMessages(){
-//
-//        LocalDateTime oneWeekAgo = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
-//
-//        Iterator<Map.Entry<String, ConcurrentLinkedQueue<Message>>> iterator = chatCache.asMap().entrySet().iterator();
-//
-//        while (iterator.hasNext()) {
-//            Map.Entry<String, ConcurrentLinkedQueue<Message>> entry = iterator.next();
-//            ConcurrentLinkedQueue<Message> queue = entry.getValue();
-//
-//            Message lastMessage = queue.peek();
-//            if (lastMessage != null && lastMessage.getCreatedAt().isBefore(oneWeekAgo)) {
-//                commitMessageQueue(queue);
-//                iterator.remove();
-//            }
-//        }
-//    }
-
     void broadcastStatusMessages(List<String> removed, Message.MessageType type, String x, String chatRoomId) {
 
         HaetsalRequestDto.UserIdList userIdList = new HaetsalRequestDto.UserIdList(removed);
@@ -206,9 +114,7 @@ public class ChatService {
 
             Message message = Message.from(chatRoomId, null, type, userInfo.getNickName() + x);
 
-//            saveInCacheOrDB(chatRoomId, message);
             chatRepository.save(message);
-
             broadcastService.broadcastMessage(message, chatRoomId);
         });
     }
