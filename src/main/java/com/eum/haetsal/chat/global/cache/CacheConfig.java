@@ -17,20 +17,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Configuration
 public class CacheConfig {
 
-    @Bean
-    public Cache<String, ConcurrentLinkedQueue<Message>> chatCache() {
-
-        RemovalListener<String, ConcurrentLinkedQueue<Message>> listener = (String key, ConcurrentLinkedQueue<Message> queue, RemovalCause cause) -> {
-            if (cause.wasEvicted()) {
-                log.info("캐시 삭제, removalListener: {}", cause);
-            }
-        };
-
-        return Caffeine.newBuilder()
-                .initialCapacity(200)
-                .maximumSize(1000)
-                .removalListener(listener)
-                .build();
-    }
+//    @Bean
+//    public Cache<String, ConcurrentLinkedQueue<Message>> chatCache() {
+//
+//        RemovalListener<String, ConcurrentLinkedQueue<Message>> listener = (String key, ConcurrentLinkedQueue<Message> queue, RemovalCause cause) -> {
+//            if (cause.wasEvicted()) {
+//                log.info("캐시 삭제, removalListener: {}", cause);
+//            }
+//        };
+//
+//        return Caffeine.newBuilder()
+//                .initialCapacity(200)
+//                .maximumSize(1000)
+//                .removalListener(listener)
+//                .build();
+//    }
 
 }

@@ -12,4 +12,4 @@ server:
 
 haetsal-url: ${PROD_HAETSAL_URL}
 
-db-name: ${PROD_DB}
+#db-name: ${PROD_DB}

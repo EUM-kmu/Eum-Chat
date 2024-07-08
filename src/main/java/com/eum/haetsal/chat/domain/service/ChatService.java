@@ -31,7 +31,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ChatService implements DisposableBean {
+// public class ChatService implements DisposableBean
+public class ChatService {
 
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
@@ -39,27 +40,28 @@ public class ChatService implements DisposableBean {
 
     private final HaetsalClient haetsalClient;
 
-    private final Cache<String, ConcurrentLinkedQueue<Message>> chatCache;
+/*    private final Cache<String, ConcurrentLinkedQueue<Message>> chatCache;
     private static final int transactionMessageSize = 15;
     private static final int messagePageableSize = 15;
 
-    private final MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;*/
 
-    @Override
+/*    @Override
     public void destroy() {
         System.out.println("서버가 종료되고 있습니다. 모든 메시지 큐를 처리합니다...");
 
         for (ConcurrentLinkedQueue<Message> messageQueue : chatCache.asMap().values()) {
             commitMessageQueue(messageQueue);
         }
-    }
+    }*/
 
     public BaseResponseEntity<?> saveMessage(String content, String userId, String chatRoomId) {
 
         Message message = Message.from(chatRoomId,userId, Message.MessageType.CHAT, content);
 
         try {
-            saveInCacheOrDB(chatRoomId, message);
+//            saveInCacheOrDB(chatRoomId, message);
+            chatRepository.save(message);
             broadcastService.broadcastMessage(message, chatRoomId);
 
             return new BaseResponseEntity<>(HttpStatus.OK);
@@ -69,7 +71,7 @@ public class ChatService implements DisposableBean {
 
     }
 
-    public void saveInCacheOrDB(String chatRoomId, Message message) {
+/*    public void saveInCacheOrDB(String chatRoomId, Message message) {
 
         ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
 
@@ -101,7 +103,7 @@ public class ChatService implements DisposableBean {
 
     public void bulkInsertMessages(List<Message> messages) {
         mongoTemplate.insertAll(messages);
-    }
+    }*/
 
     public BaseResponseEntity<?> getMessagesAndUserInfo(String chatRoomId, int pageNumber, int pageSize) {
         try {
@@ -131,25 +133,25 @@ public class ChatService implements DisposableBean {
                                     userInfo.isDeleted()
                             )));
 
-            ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
+//            ConcurrentLinkedQueue<Message> messageQueue = chatCache.getIfPresent(chatRoomId);
 
             Queue<Message> messages = null;
 
-            if(messageQueue != null && pageNumber == 0){
-                //Cache Hit
-                LinkedList<Message> reversedQueue = new LinkedList<>();
-                for (Message message : messageQueue) {
-                    reversedQueue.addFirst(message);
-                }
-                messages =reversedQueue;
-            }else{
-                if(messageQueue != null){
-                    pageNumber--;
-                }
+//            if(messageQueue != null && pageNumber == 0){
+//                //Cache Hit
+//                LinkedList<Message> reversedQueue = new LinkedList<>();
+//                for (Message message : messageQueue) {
+//                    reversedQueue.addFirst(message);
+//                }
+//                messages =reversedQueue;
+//            }else{
+//                if(messageQueue != null){
+//                    pageNumber--;
+//                }
                 Pageable pageable = PageRequest.of(pageNumber, pageSize);
                 //Cache Miss
                 messages = chatRepository.findAllByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable);
-            }
+//            }
 
             // 메시지와 사용자 정보를 결합하여 MessageResponseDTO 리스트 생성
             List<MessageResponseDTO> messageWithUserInfo = messages.stream()
@@ -176,24 +178,24 @@ public class ChatService implements DisposableBean {
         }
     }
 
-    @Scheduled(cron = "0 0 3 * * *")  // 매일 새벽 3시에 실행
-    public void cleanupOldMessages(){
-
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
-
-        Iterator<Map.Entry<String, ConcurrentLinkedQueue<Message>>> iterator = chatCache.asMap().entrySet().iterator();
-
-        while (iterator.hasNext()) {
-            Map.Entry<String, ConcurrentLinkedQueue<Message>> entry = iterator.next();
-            ConcurrentLinkedQueue<Message> queue = entry.getValue();
-
-            Message lastMessage = queue.peek();
-            if (lastMessage != null && lastMessage.getCreatedAt().isBefore(oneWeekAgo)) {
-                commitMessageQueue(queue);
-                iterator.remove();
-            }
-        }
-    }
+//    @Scheduled(cron = "0 0 3 * * *")  // 매일 새벽 3시에 실행
+//    public void cleanupOldMessages(){
+//
+//        LocalDateTime oneWeekAgo = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
+//
+//        Iterator<Map.Entry<String, ConcurrentLinkedQueue<Message>>> iterator = chatCache.asMap().entrySet().iterator();
+//
+//        while (iterator.hasNext()) {
+//            Map.Entry<String, ConcurrentLinkedQueue<Message>> entry = iterator.next();
+//            ConcurrentLinkedQueue<Message> queue = entry.getValue();
+//
+//            Message lastMessage = queue.peek();
+//            if (lastMessage != null && lastMessage.getCreatedAt().isBefore(oneWeekAgo)) {
+//                commitMessageQueue(queue);
+//                iterator.remove();
+//            }
+//        }
+//    }
 
     void broadcastStatusMessages(List<String> removed, Message.MessageType type, String x, String chatRoomId) {
 
@@ -204,7 +206,8 @@ public class ChatService implements DisposableBean {
 
             Message message = Message.from(chatRoomId, null, type, userInfo.getNickName() + x);
 
-            saveInCacheOrDB(chatRoomId, message);
+//            saveInCacheOrDB(chatRoomId, message);
+            chatRepository.save(message);
 
             broadcastService.broadcastMessage(message, chatRoomId);
         });
