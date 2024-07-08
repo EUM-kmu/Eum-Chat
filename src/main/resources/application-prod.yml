@@ -11,5 +11,3 @@ server:
   port: ${PROD_PORT}
 
 haetsal-url: ${PROD_HAETSAL_URL}
-
-db-name: ${PROD_DB}

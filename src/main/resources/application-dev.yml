@@ -11,5 +11,3 @@ server:
   port: ${DEV_PORT}
 
 haetsal-url: ${DEV_HAETSAL_URL}
-
-db-name: ${DEV_DB}
